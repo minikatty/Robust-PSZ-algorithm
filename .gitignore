@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+*.vscode/
+*.env
+.DS_Store
+.mat
