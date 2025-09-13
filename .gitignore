@@ -4,4 +4,4 @@ __pycache__/
 *.vscode/
 *.env
 .DS_Store
-.mat
+*.mat
