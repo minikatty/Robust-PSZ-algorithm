@@ -5,11 +5,14 @@ function layout_show(array)
     % 麦克风与扬声器位置
     mic_pos = array.bCtrPtsPositions;  % 1 x 3 明区控制
     mic_pos2 = array.dCtrPtsPositions;  % 暗区控制
+
+    mic_BZ_per = array.bPerPtsPositions;  % 1 x 3 明区控制eval points
+    mic_DZ_per = array.dPerPtsPositions;  % 暗区控制
+
     spk_pos = array.s;                % N x 3
     
     figure;
     hold on;
-    
     % ==== 1. 绘制房间立方体 ====
     % 顶点顺序（共8个）
     corner = [0 0 0;
@@ -38,12 +41,15 @@ function layout_show(array)
     % ==== 2. 麦克风 ====
     h1 = scatter3(mic_pos(:,1), mic_pos(:,2), mic_pos(:,3), 10, ...
         'MarkerEdgeColor','#5892E8','MarkerFaceColor','#5892E8');
+    h_BZ_eval = scatter3(mic_BZ_per(:,1), mic_BZ_per(:,2), mic_BZ_per(:,3), 10, ...
+        'MarkerEdgeColor','#000000','MarkerFaceColor','#000000');
         % for i = 1:size(mic_pos,1)
         %     text(mic_pos(i,1), mic_pos(i,2), mic_pos(i,3)+0.1,sprintf('M%d', i), 'Color', 'b');
         % end
     h2 = scatter3(mic_pos2(:,1), mic_pos2(:,2), mic_pos2(:,3), 10, ...
         'MarkerEdgeColor','#B2B9CB','MarkerFaceColor','#B2B9CB');
-    
+    h_DZ_eval = scatter3(mic_DZ_per(:,1), mic_DZ_per(:,2), mic_DZ_per(:,3), 10, ...
+        'MarkerEdgeColor','#000000','MarkerFaceColor','#000000');
     % ==== 3. 扬声器 ====
     h3 = scatter3(spk_pos(:,1), spk_pos(:,2), spk_pos(:,3), 80, ...
         'MarkerEdgeColor','#000000','MarkerFaceColor','#CC4230');
@@ -61,11 +67,13 @@ function layout_show(array)
     zlim([0 room_dim(3)]);
     
     % 只想在图例里显示 h1 和 h3
-    lgd = legend([h1 h2 h3], {'BZ Control Points','DZ Control Points' ...
-        ,'Loudspeakers'});
-    lgd.NumColumns = 3;
+    lgd = legend([h1 h_BZ_eval h2 h_DZ_eval h3], {'BZ Control Points', ...
+        'BZ Control Points for eval','DZ Control Points', ...
+        'BZ Control Points for eval', 'Loudspeakers'});
+
+    lgd.NumColumns = 2;
     lgd.FontName   = 'Times New Roman'; % 字体
-    lgd.FontSize   = 8;                % 字号
+    lgd.FontSize   = 10;                % 字号
     lgd.FontWeight = 'bold';            % 加粗
     lgd.Position = [0.383,0.72681,0.2742,0.0312];
     grid on; axis equal;
