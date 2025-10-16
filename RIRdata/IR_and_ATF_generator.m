@@ -7,12 +7,12 @@
 clc;close;
 clear;
 addpath(genpath(pwd));
-load("array.mat");
-% layout_show(array); % plot the layout and scenes
+load("RIRdata/array.mat");
+layout_show(array); % plot the layout and scenes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% parameters settings
-beta = 0.3;           % T60 reverberation time
+beta = 0.3;           % T60 reverberation time, all walls are same
 % target freqz band [100,4e3]<====>idx:[5:end]
 c = 343;              % sound speed (m/s)
 fs = 48000;           % sample rate (Hz)
@@ -33,7 +33,7 @@ rir_len = len_truncated;  % two-side spectrum
 f_ds = 16000;
 [p, q] = rat(f_ds/fs);
 frebin = 1e3/truncatad_time ; % frequency resolution for plot
-target_f_start = 200;   % target control freq band     
+target_f_start = 200;   % target control freq band  100~4000   
 target_f_end = 4000;
 frebin_tar = 25;
 f = target_f_start:frebin_tar:target_f_end; % desired control freq resolution
@@ -53,9 +53,16 @@ roomSize = array.roomSize;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SNR  range
-NumberNAdd = 1;        % Number of noise additions
+NumberNAdd = 51;        % Number of noise additions
 snr_range = [20 40];   %  30-50 is ok, can try different
 snr = linspace(snr_range(1), snr_range(end), NumberNAdd);
+
+% tmeperature
+
+
+% position mismatch
+% only 
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%  initialization of matrix
@@ -72,7 +79,7 @@ HD_eval = HDMeasured;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Noisy RIR generator
-parpool('local', 6);
+parpool('local', 8);
 rng(2025); % for reproductivity
 for ij = 1:NumberNAdd
     HBtemp = zeros(nCtr, nSrc, nf_sing); % ATFs temp memery
@@ -138,8 +145,10 @@ para.fs = f_ds;
 para.dimHBMeasured = '[nCtr, nSrc, nFreq, nNoise]';
 % IR
 para.snr = snr;
-save RIRdata/HB0929.mat HBMeasured HB_eval
-save RIRdata/HD0929.mat HDMeasured HD_eval
-save RIRdata/para0929.mat para
-save IR.mat IR
+
+% save('RIRdata/HB1004.mat', '-v7.3', 'HBMeasured', 'HB_eval');
+% save('RIRdata/HD1004.mat', '-v7.3', 'HDMeasured', 'HD_eval');
+save('RIRdata/IR_data1004.mat', '-v7.3','IR');
+save('RIRdata/para1004.mat', 'para');
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
