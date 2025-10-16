@@ -4,7 +4,7 @@ The implementation of a robust hybrid method for PSZ
 ## 1 Project structure
 
 ```
-Project/                         %项目主目录
+Robust-PSZ-algorithm/                         %项目主目录
 │
 ├── README.md                    % 项目概览说明文档
 ├── main.m                       % 主程序入口
@@ -33,16 +33,19 @@ Project/                         %项目主目录
 ```
 
 
-##  2 data structure
+##  2 data structure: Generated RIR & ATFs
 
 ```
-IR
- ├─ HB_ctrl      (cell) 控制点RIR
- ├─ HB_eval      (cell) 评价点RIR
- ├─ parameters   (struct)
- │   ├─ fs       (double) 采样率
- │   ├─ beta     (double) 混响时间
- │   └─ roomSize (1x3 double) 房间尺寸
+para1004.mat
+"para1004"+"date".mat" 
+ ├─ f                  (double): =nFreq,单边谱的频率,目标频段设置在@200~4000HZ
+ ├─ ftar               (double): 控制滤波器控制的频率，也是滤波器的阶数
+ ├─ fs                 (double): 采样率
+ ├─ dimHBMeasured      ([nCtr, nSrc, nFreq, nNoise]): 数据维度结构
+ ├─ dimHBMeasured      ([nCtr, nSrc, nFreq, nNoise]): 数据维度结构
+ └─ snr                (double): 不同的加噪的snr水平
 
+"HB\D"+"date".mat"  % ATFs for BZ&DZ
+ ├─ HB\D_ctrl      (mat) 控制点RIR
+ └─ HB\DMeasured   (mat) 评测点RIR
 ```
-
