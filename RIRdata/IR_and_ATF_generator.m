@@ -4,7 +4,8 @@
 %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% array
-clc;close;
+clc;
+% close;
 clear;
 addpath(genpath(pwd));
 load("RIRdata/array.mat");
