@@ -8,8 +8,8 @@ clc;
 % close;
 clear;
 addpath(genpath(pwd));
-load("RIRdata/array.mat");
-layout_show(array); % plot the layout and scenes
+load("RIRdata/arrayGeometry/array.mat");
+% layout_show(array); % plot the layout and scenes
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% parameters settings
