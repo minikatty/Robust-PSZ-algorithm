@@ -1,6 +1,6 @@
 %% ============ 4. 可视化 ============
 clc;close;
-load('array.mat');
+load('data/arrayGeometry/array.mat');
 speakers = array.s;
 BZ_control = array.bCtrPtsPositions;
 BZ_monitor = array.bPerPtsPositions;
@@ -181,6 +181,14 @@ function visualize3DGeometry(room_size, speakers, DZ_control, BZ_control, ...
     xlim([0, room_size(1)]);
     ylim([0, room_size(2)]);    
     hold off;
+
+    output_folder = '../../results/array/'; % 文件夹已经存在
+    file_name = 'array_visualization.fig';
+    full_path = fullfile(output_folder, file_name); % 使用 fullfile构造完整路径
+
+    savefig(gcf, full_path);
+    
+    fprintf('Figure saved to: %s\n', full_path);
 end
 
 %% ============ 绘制房间边界 ============

@@ -149,7 +149,7 @@ function plot_soundfield_pressure(grid_rir_data_file, ...
     xlabel('X (m)', 'FontSize', 12); ylabel('Y (m)', 'FontSize', 12);
     xticks(0:1:4);yticks(0:1:4);
     title(sprintf('声压级(dB)分布 @ %.1f Hz', actual_f), 'FontSize', 14);
-    colormap(subplot(1,2,1), brewermap([], 'RdBu')); 
+    colormap(subplot(1,2,1), brewermap([], '-RdBu')); 
     c = colorbar; c.Label.String = '声压级 (dB)'; c.Label.FontSize = 11;
     max_dB = max(P_dB_grid(:),[],'omitnan');
     min_dB = min(P_dB_grid(:),[],'omitnan');
@@ -163,7 +163,7 @@ function plot_soundfield_pressure(grid_rir_data_file, ...
     xlabel('X (m)', 'FontSize', 12); ylabel('Y (m)', 'FontSize', 12);
     xticks(0:1:4);yticks(0:1:4);
     title(sprintf('声压相位分布 @ %.1f Hz (rad)', actual_f), 'FontSize', 14);
-    colormap(subplot(1,2,2), brewermap([], 'RdBu')); 
+    colormap(subplot(1,2,2), brewermap([], '-RdBu')); 
     c = colorbar; c.Label.String = '相位 (rad)'; c.Label.FontSize = 11;
     grid off;
     
