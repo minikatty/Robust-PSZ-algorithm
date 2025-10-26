@@ -13,14 +13,6 @@
 % This script serves as the main entry point for the entire project.
 % It sets up the environment, runs simulations,executes the core algorithm,
 % and visualizes the results.
-
-%% MAIN SCRIPT - Quick Debug & Verification
-% This script is for quickly testing the generate_rir_database function.
-% It uses minimal parameters to ensure a fast execution time.
-
-% =========================================================================
-% 1. SETUP ENVIRONMENT
-% =========================================================================
 clear;
 clc;
 close all;
@@ -30,52 +22,49 @@ close all;
 addpath(genpath('src/'));
 
 rng(2025); % For reproducibility
-% =========================================================================
-% 2. RUN A MINIMAL TEST CASE
-% =========================================================================
-fprintf('--- Starting Quick Test ---\n\n');
 
-% --- Test Case 1: SNR Mode ---
-fprintf('Generating SNR mode...\n');
-try
-    % generate_rir_database('snr', ...
-    %     'snr_range', [10 30], ...  % A small SNR range
-    %     'num_steps', 1);           % Only generate 1 files
-    generate_rir_database('snr');
-    fprintf('SUCCESS: SNR mode test completed.\n');
-    fprintf('Please check the "data/SimulateRIR/snr/" folder.\n\n');
-catch ME
-    fprintf('ERROR in SNR mode test: %s\n', ME.message);
+%% MAIN SCRIPT - Quick Debug & Verification (Refactored)
+% This script systematically generate rir databases of all modes 
+
+fprintf('--- Starting Generator for All Generation Modes ---\n\n');
+
+% --- Define all modes in a cell array ---
+modes_to_test = {'snr', 'temperature', 'position'};
+
+% --- Loop through each mode and run the generator ---
+for i = 1:length(modes_to_test)% <------这里可以更改生成模式
+    
+    current_mode = modes_to_test{i};
+    
+    fprintf('--- Testing Mode: %s ---\n', upper(current_mode));
+    
+    try
+        % Define specific small parameters for each mode for a quick test
+        switch current_mode
+            case 'snr'
+                generate_rir_database(current_mode);
+            case 'temperature'
+                generate_rir_database(current_mode);
+            case 'position'
+                generate_rir_database(current_mode);
+            otherwise
+                % Default call if no specific parameters are needed
+                generate_rir_database(current_mode);
+        end
+        
+        % --- Success Message ---
+        fprintf('SUCCESS: "%s" mode generation is completed.\n', current_mode);
+        fprintf('Please check the "data/SimulateRIR/%s/" folder.\n\n', current_mode);
+        
+    catch ME
+        % --- Error Message ---
+        fprintf('ERROR in "%s" mode test: %s\n', current_mode, ME.message);
+        % Optional: rethrow(ME); % Uncomment if you want the script to stop on error
+    end
+    
 end
 
-
-% % --- Test Case 2: Temperature Mode ---
-% fprintf('Testing Temperature mode...\n');
-% try
-%     generate_rir_database('temperature', ...
-%         'temp_range', [18 22], ... % A small temperature range
-%         'num_steps', 2);           % Only generate 2 files
-%     fprintf('SUCCESS: Temperature mode test completed.\n');
-%     fprintf('Please check the "data/SimulateRIR/temperature/" folder.\n\n');
-% catch ME
-%     fprintf('ERROR in Temperature mode test: %s\n', ME.message);
-% end
-% 
-% 
-% % --- Test Case 3: Position Mode ---
-% fprintf('Testing Position mode...\n');
-% try
-%     generate_rir_database('position', ...
-%         'num_runs', 3, ...         % Only generate 3 random runs
-%         'max_offset', 0.05);
-%     fprintf('SUCCESS: Position mode test completed.\n');
-%     fprintf('Please check the "data/SimulateRIR/position/" folder.\n\n');
-% catch ME
-%     fprintf('ERROR in Position mode test: %s\n', ME.message);
-% end
-
-
-fprintf('--- Quick Test Finished ---\n');
+fprintf('--- Dataset Generation is Finished ---\n');
 
 % % =========================================================================
 % % 1. SETUP ENVIRONMENT
@@ -174,3 +163,9 @@ fprintf('--- Quick Test Finished ---\n');
 
 
 % % grid_RIR_file = ;
+% logfile = "D:\CodeManage\Robust-PSZ-algorithm\log\run_2025-10-27_23-41.log";
+% 
+% send_graphmail("zhouleicqupt2016@outlook.com", ...
+%                "Run finished. Log attached.", ...
+%                "The job ended. See attached log file.", ...
+%                'Attachments', logfile);

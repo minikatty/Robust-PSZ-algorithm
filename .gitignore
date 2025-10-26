@@ -8,3 +8,7 @@ __pycache__/
 debug*.m
 test*.m
 *.asv
+draft*.m
+*.jason
+*.log
+send_notification.py
