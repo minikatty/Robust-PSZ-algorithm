@@ -87,7 +87,7 @@ function send_graphmail(to_addr, subject_txt, body_txt, varargin)
     [status, out] = system(cmd);
 
     % 打印 Python 那边输出，方便调试
-    fprintf('--- send_notification.py output ---\n%s\n-------------------------------\n', out);
+    % fprintf('--- send_notification.py output ---\n%s\n-------------------------------\n', out);
 
     % 若 Python 返回非 0，就认为失败（可能是 401 / 403 / 网络问题等）
     if status ~= 0
