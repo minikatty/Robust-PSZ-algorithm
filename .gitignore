@@ -9,7 +9,7 @@ debug*.m
 test*.m
 *.asv
 draft*.m
-*.jason
+*.json
 *.log
 send_notification.py
 test*.m
