@@ -12,3 +12,4 @@ draft*.m
 *.jason
 *.log
 send_notification.py
+test*.m

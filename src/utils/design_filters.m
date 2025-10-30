@@ -18,7 +18,7 @@ function filters_w = design_filters(algorithm_name, design_data, freq_params)
         case 'ACC'
             % --- ACC ALGORITHM GOES HERE ---
             fprintf('  Designing filters with ACC...\n');
-            filters_w = acc_algorithm(ATF_BZ_ctrl, ATF_DZ_ctrl, target_indices);
+            filters_w = ACC(ATF_BZ_ctrl, ATF_DZ_ctrl, target_indices);
             
         case 'PM'
             % --- PRESSURE MATCHING ALGORITHM GOES HERE ---
