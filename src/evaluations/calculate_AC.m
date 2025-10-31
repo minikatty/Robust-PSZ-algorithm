@@ -10,5 +10,5 @@ function AC = calculate_AC(w, H_B, H_D)
     epsilon = 1e-12;
     
     mu = (M_D * numerator) / (M_B * denominator + epsilon);
-    AC = 10 * log10(mu + epsilon);
+    AC = 10 * log10(mu + epsilon); % dB
 end

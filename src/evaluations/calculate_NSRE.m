@@ -1,6 +1,6 @@
 function NSRE = calculate_NSRE(w, H_B, p_d)
 % CALCULATE_NSRE - Computes the Normalized Sound Reproduction Error (NSRE) in dB.
-    
+% the desired virtual source field: p_d
     p_reproduced = H_B * w;
     
     % Add a small epsilon to prevent division by zero if target field is silent

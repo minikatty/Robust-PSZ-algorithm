@@ -86,13 +86,14 @@ try
                 all_filters.(algo_name) = design_filters(algo_name, design_data, freq_params);
             end
             
+            % cross-evaluations
             for j = 1:num_levels
                 log_message(log_fid, sprintf('Processing: Mode [%s], Design [%d/%d], Operating [%d/%d]...', ...
                     upper(current_mode), i, num_levels, j, num_levels), 'INFO', ECHO_TO_CONSOLE);
-                
+                 % load cross-evaluation data
                 if i == j, operating_data = design_data;
                 else
-                    operating_param = param_vector(j);
+                    operating_param = param_vector(j); % snr sets
                     operating_filename = get_data_filename(data_dir, current_mode, operating_param);
                     operating_data = load(operating_filename);
                 end

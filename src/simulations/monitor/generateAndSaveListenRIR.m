@@ -18,7 +18,7 @@ function generateAndSaveListenRIR(array_file, varargin)
     addParameter(p, 'temperature', 20, @isnumeric);
     addParameter(p, 'beta', 0.3, @isnumeric);
     addParameter(p, 'fs', 16000, @isnumeric);
-    addParameter(p, 'save_filename', 'gridRIR_data.mat', @ischar);
+    addParameter(p, 'save_filename', 'MonitorGridRIR_data.mat', @ischar);
     addParameter(p, 'margin', 0.05, @isnumeric);
     addParameter(p,'z_height', 1.6, @isnumeric);
     parse(p, varargin{:});

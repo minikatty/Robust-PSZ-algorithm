@@ -42,8 +42,8 @@ function log_message(log_fid, message, level, echo_to_console)
         warning('log_message:WriteFailed', ...
                 'Failed to write to log file: %s', ME.message);
     end
-
-    % 4. 需要的话也打到标准输出
+    
+    % 4. 打到标准输出
     %    （服务器 nohup 模式你把 echo_to_console 设成 false，
     %     这样就不会把所有日志复制到 nohup.out 里）
     if echo_to_console
