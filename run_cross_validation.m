@@ -112,7 +112,7 @@ try
         end
         
         % --- Save results for the current mode ---
-        results_dir = fullfile('results', [current_mode, '_Analysis']);
+        results_dir = fullfile('results', [current_mode, '_AnalysisData']);
         if ~exist(results_dir, 'dir'), mkdir(results_dir); end
         results_filename = fullfile(results_dir, 'performance_matrices.mat');
         save(results_filename, 'results', 'para', 'algorithms_to_test', 'metrics_to_evaluate');
