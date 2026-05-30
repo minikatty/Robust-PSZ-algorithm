@@ -9,11 +9,11 @@ function[w] = ACC(Hb_ctrl, Hd_ctrl, target_indices)
         % compute Filter coefficient with Inevitable solution method
         Rb = (squeeze(Hb_ctrl(:, :, idx))') * squeeze(Hb_ctrl(:, :, idx));
         Rd = (squeeze(Hd_ctrl(:, :, idx))') * squeeze(Hd_ctrl(:, :, idx));
-        belta = max(eig(Rd))*(1e-8);
-%         belta = max(eig(Rd))*(1e-5);
-        R = (Rd + belta*eye(size(Hd_ctrl, 2))) \ (Rb);
+        belta = max(eig(Rd))*5e-2;
+        % belta = 1e-2;  
+        R = (Rd + belta*eye(size(Hd_ctrl, 2))) \ Rb;
+        % R = Rd\Rb;
         [~, w(:, i)] = MaxEigenvector(R);
-    end
-    
+    end 
 end
 

@@ -21,8 +21,8 @@ function generate_monitor_rir(varargin)
     addParameter(p, 'output_file', 'data/MonitorGrid/gridRIR_data.mat', @ischar);
     addParameter(p, 'log_fid', nan, @isnumeric);
     addParameter(p, 'echo_console', true, @islogical);
-    
-    addParameter(p, 'grid_spacing', 0.05, @isnumeric);
+
+    addParameter(p, 'grid_spacing', 0.05, @isnumeric);%目前是0.02
     addParameter(p, 'temperature', 20, @isnumeric);
     addParameter(p, 'beta', 0.3, @isnumeric);
     addParameter(p, 'fs', 16000, @isnumeric);
@@ -115,7 +115,7 @@ function generate_monitor_rir(varargin)
     parfor i = 1:N_spk
         % Create a temporary slice for the current speaker to improve parfor efficiency
         temp_rir_slice = zeros(N_grid, rir_len);
-        spk_pos_i = speakers(i,:); % Broadcast this speaker's position
+        spk_pos_i = speakers(i,:); 
         
         for j = 1:N_grid
             temp_rir_slice(j, :) = rir_generator(c, fs, grid_points(j,:), spk_pos_i, room_size, beta, rir_len);

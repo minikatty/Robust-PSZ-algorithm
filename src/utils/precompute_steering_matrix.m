@@ -1,7 +1,6 @@
 function S = precompute_steering_matrix(mic_positions, freqs, c)
 % PRECOMPUTE_PLANARITY_MATRIX - Precomputes the S matrix for planarity calculation.
-    BZ_origin_shift = [2.6,2,0];
-    planarity_eval_mic_position(array);
+    BZ_origin_shift = [2.6,2,0]; % shift the origin to the center of BZ
     num_mics = size(mic_positions, 1);
     num_freqs = length(freqs);
     mic_positions = mic_positions - BZ_origin_shift;

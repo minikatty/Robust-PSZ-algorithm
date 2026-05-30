@@ -50,10 +50,6 @@ modes_to_generate = {'position'}; % 可调节接口：'snr', 'temperature',
 % -------------------------------------------------------------------------
 try
     log_message(log_fid, '--- RIR Generation Script Started ---', 'INFO', ECHO_TO_CONSOLE);
-    % 如果你想在启动时发邮件可以解开这里
-    % if enable_notifications
-    %     send_graphmail(recipient_email, '[MATLAB Job Started]', 'RIR generation has begun.');
-    % end
 
     total_timer = tic;
 
@@ -65,7 +61,7 @@ try
             'INFO', ECHO_TO_CONSOLE);
 
         try
-            % 真正干活的函数放这里
+            % 生成数据的函数在这里
             generate_rir_database(current_mode,log_fid, ECHO_TO_CONSOLE);
 
             log_message(log_fid, ...
@@ -100,7 +96,7 @@ try
     end
 
     % 如果你在本地调试时希望一个总结行，下面这个printf是安全的；
-    % 如果nohup后台，这行stdout会进nohup.out，介意的话可以注释掉
+    % 如果nohup后台，stdout会进nohup.out
     if ECHO_TO_CONSOLE
         fprintf('\n--- All Tasks Finished Successfully ---\n');
     end

@@ -293,10 +293,10 @@ function process_and_save_data(IR_BZ, IR_DZ, freq_params, p_resample, q_resample
     % This function handles resampling, ATF computation, data type conversion, and saving.
 
     % 1. Resample
-    IR_BZ.ctrl = resample(IR_BZ.ctrl, p_resample, q_resample, 'Dimension', 3);
-    IR_BZ.eval = resample(IR_BZ.eval, p_resample, q_resample, 'Dimension', 3);
-    IR_DZ.ctrl = resample(IR_DZ.ctrl, p_resample, q_resample, 'Dimension', 3);
-    IR_DZ.eval = resample(IR_DZ.eval, p_resample, q_resample, 'Dimension', 3);
+    % IR_BZ.ctrl = resample(IR_BZ.ctrl, p_resample, q_resample, 'Dimension', 3);
+    % IR_BZ.eval = resample(IR_BZ.eval, p_resample, q_resample, 'Dimension', 3);
+    % IR_DZ.ctrl = resample(IR_DZ.ctrl, p_resample, q_resample, 'Dimension', 3);
+    % IR_DZ.eval = resample(IR_DZ.eval, p_resample, q_resample, 'Dimension', 3);
 
     % 2. Compute all ATFs
     ATF_BZ.ctrl = compute_atf(IR_BZ.ctrl, freq_params);

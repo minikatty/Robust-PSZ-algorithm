@@ -5,9 +5,9 @@ function generateAndSaveListenRIR(array_file, varargin)
     %   array_file: 阵列信息文件（如 'array.mat'）
     %               必须包含: speakers, room_size, z_height
     %   varargin: 可选参数
-    %       'grid_spacing' - 网格间距 [m]，默认 0.05
+    %       'grid_spacing' - 网格间距 [m]，默认 0.02
     %       'temperature' - 温度 [°C]，默认 20
-    %       'beta' - 墙面反射系数，默认 0.3
+    %       'beta' - 混响参数，默认 0.3
     %       'fs' - 采样率 [Hz]，默认 16000
     %       'save_filename' - 保存文件名，默认 'gridRIR_data.mat'
     %       'margin' - 边界留白 [m]，默认 0.05

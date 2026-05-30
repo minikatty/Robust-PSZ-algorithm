@@ -12,20 +12,19 @@ clear; clc; close all;
 %  1. CONFIGURATION & SETUP
 %  ========================================================================
 addpath(genpath('src/'));
-rng(2025);
 
 % --- Logging & Notification ---
 log_dir = 'logs';
 if ~exist(log_dir, 'dir'), mkdir(log_dir); end
 run_timestamp = datetime("now","Format","yyyyMMdd_HHmm");
-log_filename = fullfile(log_dir, sprintf('%s_cross_validation_run.log', char(run_timestamp)));
+log_filename = fullfile(pwd,log_dir, sprintf('%s_cross_validation_run.log', char(run_timestamp)));
 log_fid = fopen(log_filename, 'a');
 if log_fid == -1, error('main_2:LogOpenFailed', '无法打开日志文件: %s', log_filename); end
 cleanupObj = onCleanup(@() safe_close(log_fid));
 ECHO_TO_CONSOLE = true; % Set true for local debug, false for server nohup
 
 recipient_email = 'zhouleicqupt2016@outlook.com'; % <-- Set your email
-enable_notifications = true;
+enable_notifications = false; % debug:false;
 
 % --- Experiment Configuration ---
 experiment_modes = {'snr'}; %, 'temperature', 'position'
@@ -54,15 +53,28 @@ try
             log_message(log_fid, sprintf('Metadata file "para.mat" not found in %s. Skipping this mode.', data_dir), 'WARN', ECHO_TO_CONSOLE);
             continue; % Skip to the next mode
         end
-        load(para_file); % Loads 'para'
+        load(para_file); % Loads 'para' setting file
         
         switch current_mode
             case 'snr', param_vector = para.snr_vector;
             case 'temperature', param_vector = para.temperature_vector_celsius;
             case 'position', param_vector = para.perturbation_radii_m;
         end
-        num_levels = length(param_vector);
-        freq_params = para.freq_params;
+        num_levels = length(param_vector); % cross validation experiment counts
+        freq_params = para.freq_params; % mode parameter: snr/tempareture/mismatchment value
+
+        eval_params = struct();
+        if isfield(para, 'eval_params'), eval_params = para.eval_params; end
+        
+        % For 'snr' and 'position' modes, sound speed is constant. We pre-compute
+        % S_matrix using the base sound speed from the para file.
+        % For 'temperature' mode, this will serve as a placeholder and will be
+        % overwritten inside the loop.
+        geometry_array = load('data/arrayGeometry/array.mat'); 
+        eval_params.S_matrix = precompute_steering_matrix(geometry_array.array.bPerPtsPositions, ...
+                                                           freq_params.target_freqs, ...
+                                                           temp2speed(20));
+
 
         % --- Pre-allocate results for the current mode ---
         results = struct();
@@ -77,35 +89,46 @@ try
         % --- Main Cross-Validation Loop ---
         for i = 1:num_levels
             design_param = param_vector(i);
+            if strcmp(current_mode, 'temperature')
+                    % S_matrix depends on sound speed, which varies with temperature.
+                    % Re-calculate it for the current operating condition.
+                    current_sound_speed = design_param;
+                    eval_params.S_matrix = precompute_steering_matrix(geometry_array.arrays.bPerPtsPositions, ...
+                                                                        freq_params.target_freqs, ...
+                                                                        temp2speed(current_sound_speed));
+            end
             design_filename = get_data_filename(data_dir, current_mode, design_param);
-            design_data = load(design_filename);
+            design_data = load(design_filename); % load rir/ATF data for control filter
             
             all_filters = struct();
             for k = 1:length(algorithms_to_test)
                 algo_name = algorithms_to_test{k};
-                all_filters.(algo_name) = design_filters(algo_name, design_data, freq_params);
+                all_filters.(algo_name) = design_filters(algo_name, design_data, freq_params); 
+                % get control filter in a nominal environment
             end
             
-            % cross-evaluations
+            % cross-evaluations % simulate the different work condition
+            % using a filter obtained in the nominal environment
             for j = 1:num_levels
                 log_message(log_fid, sprintf('Processing: Mode [%s], Design [%d/%d], Operating [%d/%d]...', ...
                     upper(current_mode), i, num_levels, j, num_levels), 'INFO', ECHO_TO_CONSOLE);
                  % load cross-evaluation data
-                if i == j, operating_data = design_data;
+                if i == j, operating_data = design_data; % 避免重复读取
                 else
-                    operating_param = param_vector(j); % snr sets
+                    operating_param = param_vector(j); % mode paras values
                     operating_filename = get_data_filename(data_dir, current_mode, operating_param);
-                    operating_data = load(operating_filename);
+                    operating_data = load(operating_filename); % load the cross-evaluation rir/ATF data
                 end
                 
                 for k = 1:length(algorithms_to_test)
                     algo_name = algorithms_to_test{k};
                     filters_w = all_filters.(algo_name);
-                    performance = evaluate_performance(filters_w, operating_data, freq_params);
+                    eval_params.algorithm_name = algo_name;
+                    performance = evaluate_performance_V2(filters_w, operating_data, freq_params, eval_params);
                     
                     for m = 1:length(metrics_to_evaluate)
                         metric_name = metrics_to_evaluate{m};
-                        results.(algo_name).(metric_name)(i, j) = performance.(metric_name);
+                        results.(algo_name).(metric_name)(i, j,length(freq_params.target_freqs)) = performance.(metric_name);
                     end
                 end
             end
@@ -134,12 +157,12 @@ try
 
 catch ME_main
     % --- Global Error Handling & Notification ---
-    final_error_msg = sprintf('CRITICAL FAILURE in cross-validation script.\n\nError: %s', ME_main.message);
+    final_error_msg = sprintf('CRITICAL FAILURE in cross-validation script.Error: %s', ME_main.message);
     log_message(log_fid, final_error_msg, 'FATAL', ECHO_TO_CONSOLE);
     log_message(log_fid, getReport(ME_main, 'extended', 'hyperlinks', 'off'), 'DEBUG', ECHO_TO_CONSOLE);
-    
+    fclose(log_fid);
     if enable_notifications
-        send_graphmail(recipient_email, '[MATLAB Job FAILED] Cross-Validation Error', final_error_msg, {log_filename});
+        send_graphmail(recipient_email, '[MATLAB Job FAILED] Cross-Validation Error', final_error_msg, 'Attachments', {log_filename});
     end
     
     if ECHO_TO_CONSOLE, fprintf('\n--- Script Terminated Due to a Critical Error ---\n'); end
@@ -148,5 +171,5 @@ end
 
 %% LOCAL FUNCTIONS
 function safe_close(fid)
-    if ~(isscalar(fid) && isnumeric(fid) && fid == -1), try, fclose(fid); catch, end, end
+    if ~(isscalar(fid) && isnumeric(fid) && fid == -1), try fclose(fid); catch, end, end
 end
