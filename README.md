@@ -99,7 +99,6 @@ Robust-PSZ-algorithm/
 ├── step5_Real_Measured.m           # Step 5: Validate algorithms using measured cabin data
 │
 │ % --- Analysis & Utility Scripts ---
-├── paras_sensitivity_main.m        # Sensitivity analysis for weighting parameter ρ
 ├── Revisit_Robustness.m            # In-depth analysis of robustness mechanisms
 ├── get_design_data.m               # Script to extract experimental configurations
 └── README.md                       # Project documentation
