@@ -122,4 +122,4 @@ If you find this code or dataset useful for your research, please cite our paper
 
 ## Contact
 
-For any questions or collaborations, please contact: zhouleicqupt2016@outlook.com.
+For any questions, please contact: zhouleicqupt2016@outlook.com.
