@@ -1,51 +1,118 @@
 # Robust-PSZ-algorithm
-The implementation of a robust hybrid method for PSZ
+The LMI-based framework implementation of a robust hybrid method for PSZ.
 
-## 1 Project structure
+key word: sound field control; robust control; SDP; robust least square
 
+## Usage Notes
+
+### ⚠️ Important Notes
+* **Data Exclusion:** Please note that raw data files (`.mat`) and MATLAB figure files (`.fig`) are **not included** in this repository to keep the package lightweight.
+* **Dependencies:** The visualization scripts require the **brewermap** package to render colormaps correctly. 
+    * Download link: [brewermap (MATLAB Central File Exchange)](https://ww2.mathworks.cn/matlabcentral/fileexchange/45208-colorbrewer-attractive-and-distinctive-colormaps)
+* **Functionality:** A brief description of each script's primary purpose is provided in the file tree comments below.
+
+## Project Structure
+
+```text
+Robust-PSZ-algorithm/
+│
+├── data/                           # Acoustic Datasets (Local storage)
+│   ├── arrayGeometry/              # Array configurations (Loudspeakers/Microphones)
+│   │   ├── array.mat               # Raw coordinates of transducers
+│   │   ├── array_layout.mat        # Pre-defined topological parameters
+│   │   └── arrayGeometry.fig       # Visualization of the array setup
+│   ├── Cabin_Measurements/         # Real-world ATF dataset (60 sets from car cabin)
+│   ├── MonitorGrid/                # High-density grids for sound field visualization
+│   └── SimulateRIR/                # Simulated Room Impulse Responses (RIRs)
+│       ├── position/               # RIRs with microphone position perturbations
+│       ├── snr/                    # RIRs with varying Signal-to-Noise Ratios
+│       └── temperature/            # RIRs with temperature-induced sound speed mismatch
+│
+├── lib/                            # External toolboxes (e.g., CVX, RIR-Generator)
+├── logs/                           # Runtime logs and intermediate variables
+├── results/                        # Numerical simulation outputs and figures
+├── real_measured_results/          # Results validated using car cabin data
+│
+├── src/                            # Source Code
+│   ├── algorithm/                  # Core algorithm implementations
+│   │   ├── vast/                   # VAST (Variable Span Trade-off) method based on the public code
+│   │   ├── ACC.m                   # Acoustic Contrast Control (Baseline)
+│   │   ├── ACC_PM.m                # Hybrid ACC-PM (Non-robust baseline)
+│   │   ├── PM.m                    # Pressure Matching (Baseline)
+│   │   ├── POTDC_RACC.m            # Robust ACC via POTDC (Iterative SDP)
+│   │   ├── RACC_PM.m               # Proposed Robust ACC-PM (Core framework)
+│   │   ├── RACC_PM_GLS.m           # Proposed RACC-PM (Global Large Scale / Monolithic)
+│   │   ├── RACC_PM_Sub.m           # Proposed RACC-PM (Decomposed / Efficient version)
+│   │   ├── RPM.m                   # Robust Pressure Matching (SOCP-based)
+│   │   └── wcACC.m                 # Worst-case Robust ACC (Diagonal loading)
+│   │
+│   ├── evaluations/                # Performance evaluation metrics
+│   │   ├── calculate_AC.m          # Compute Acoustic Contrast (AC)
+│   │   ├── calculate_AE.m          # Compute Array Effort (AE)
+│   │   ├── calculate_NSRE.m        # Compute Normalized Squared Reproduction Error (NSRE)
+│   │   ├── calculate_planarity.m   # Compute sound field Planarity
+│   │   ├── evaluate_performance.m  # Main performance evaluation wrapper
+│   │   └── evaluate_performance_V2.m # Updated performance evaluation wrapper
+│   │
+│   ├── simulations/                # Acoustic environment and scenario configurations
+│   ├── visualization/              # Sound field maps, phase plots, and performance curves
+│   |── utils/                      # General utility functions and helper modules
+│   |    ├── compute_atf.m          # Compute Acoustic Transfer Functions (ATFs) from RIRs
+│   |    ├── configure_freq_parameters.m # Initialize frequency-domain simulation parameters
+│   |    ├── design_filters.m       # High-level wrapper for loudspeaker filter design
+│   |    ├── evaluate_performance.m # Performance evaluation and metric calculation
+│   |    ├── get_bound_paras.m      # Calculate uncertainty bounds for robust optimization
+│   |    ├── get_data_filename.m    # Utility for automated data file naming/management
+│   |    ├── get_real_measurement_bound.m # Extract uncertainty bounds from measured data (discard)
+│   |    ├── log_message.m          # Logging utility for tracking simulation progress
+│   |    ├── MaxEigenvector.m       # Math utility: Principal eigenvector extraction
+│   |    ├── msal_token_cache_outlook.json # Token cache for the Outlook notification system
+│   |    ├── pagemtimes_tmp.m       # Page-wise matrix multiplication (optimization)
+│   |    ├── pagenorm_tmp.m         # Page-wise matrix norm calculation
+│   |    ├── plane_wave_generator.m # Target sound field (ideal plane wave) generation
+│   |    ├── precompute_steering_matrix.m # Precompute steering matrices for planarity metrics
+│   |    ├── send_graphmail.m       # MATLAB interface for sending emails via MS Graph API
+│   |    ├── send_notification.py   # Python backend for the automated notification system
+│   |    └── temp2speed.m           # Convert temperature to sound speed (for robustness analysis)
+│   └── debug/                      # Internal debugging scripts and variable validation
+│
+│   % --- Main Experimental Pipeline ---
+├── step1_data_generator.m          # Step 1: Generate/Load ATFs and pre-process data
+├── step2_run_cross_validation_V2.m # Step 2: Execute robustness and cross-validation tests
+├── step3_results_show.m            # Step 3: Summarize and plot simulation results
+├── step4_Pareto_Front.m            # Step 4: Analyze the trade-off between AC and NSRE
+├── step_betweent_4_5_data_processing.m # Data formatting for real-world validation
+├── step5_Real_Measured.m           # Step 5: Validate algorithms using measured cabin data
+│
+│ % --- Analysis & Utility Scripts ---
+├── paras_sensitivity_main.m        # Sensitivity analysis for weighting parameter ρ
+├── Revisit_Roubstness.m            # In-depth analysis of robustness mechanisms
+├── get_design_data.m               # Script to extract experimental configurations
+└── README.md                       # Project documentation
 ```
-Robust-PSZ-algorithm/                         %项目主目录
-│
-├── README.md                    % 项目概览说明文档
-├── main.m                       % 主程序入口
-├── config/                      % 参数配置文件夹
-│   ├── config_default.mat       % 默认参数（fs, beta, roomSize 等）
-│   └── config_custom.mat        % 具体实验配置
-│
-├── RIRdata/                     % 输入 / 输出数据目录
-│   ├── raw/                     % 原始数据（测量/录制）
-│   ├── processed/               % 处理后结果（滤波、降采样）
-│   └── results/                 % 实验输出结果（RIR、IR等）
-│
-├── src/                         % 核心源代码
-│   ├── rir_generator.m          % RIR生成函数
-│   ├── rir_postprocess.m        % RIR预处理（滤波、截断、归一化）
-│   ├── showStruct.m             % 自动结构体分析工具（见下）
-│   └── utils/                   % 工具函数（如绘图、分析等）
-│
-├── docs/                        % 文档、图示、流程图等
-│   ├── structure_diagram.png    % 数据结构图
-│   └── signal_flow_mermaid.md   % Markdown信号流图
-│
-└── logs/                        % 日志、运行记录
-    └── meta_2025_10_04.mat      % 运行时参数记录
 
+## Data Availability
+
+- **Simulated Data:** All simulated Room Impulse Responses (RIRs) and Acoustic Transfer Functions (ATFs) can be reproduced locally by executing the provided scripts in the `step1_data_generator.m` pipeline.
+- **Measured Data:** The real-world car cabin measurement dataset is available upon request. Due to commercial confidentiality and partnership agreements, this dataset is **strictly restricted to academic research purposes only**. It may not be redistributed or used for any commercial applications. 
+  - To obtain access to the cloud storage link, please contact the author via email.
+
+## Citation
+
+If you find this code or dataset useful for your research, please cite our paper:
+> L. Zhou, Y. Zhu, C. Huang, Y. Wang, L. Shi, L. Gan, and H. Liu, "A Unified LMI-Based Framework for Robust Personal Sound Zone Control," *IEEE Transactions on Audio, Speech, and Language Processing*, 2025. (Under Review)
+
+**BibTeX:**
+```bibtex
+@article{zhou2026robust,
+  title={A Unified LMI-Based Framework for Robust Personal Sound Zone Control},
+  author={Zhou, Lei and Zhu, Yaqi and Huang, Chen and Wang, Yuewen and Shi, Liming and Gan, Lu and Liu, Hongqing},
+  journal={IEEE Transactions on Audio, Speech, and Language Processing},
+  year={2026},
+  publisher={IEEE}
+}
 ```
 
+## Contact
 
-##  2 data structure: Generated RIR & ATFs
-
-```
-para1004.mat
-"para1004"+"date".mat" 
- ├─ f                  (double): =nFreq,单边谱的频率,目标频段设置在@200~4000HZ
- ├─ ftar               (double): 控制滤波器控制的频率，也是滤波器的阶数
- ├─ fs                 (double): 采样率
- ├─ dimHBMeasured      ([nCtr, nSrc, nFreq, nNoise]): 数据维度结构
- ├─ dimHBMeasured      ([nCtr, nSrc, nFreq, nNoise]): 数据维度结构
- └─ snr                (double): 不同的加噪的snr水平
-
-"HB\D"+"date".mat"  % ATFs for BZ&DZ
- ├─ HB\D_ctrl      (mat) 控制点RIR
- └─ HB\DMeasured   (mat) 评测点RIR
-```
+For any questions or collaborations, please contact: zhouleicqupt2016@outlook.com.

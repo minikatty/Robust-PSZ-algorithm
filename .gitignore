@@ -13,3 +13,5 @@ draft*.m
 *.log
 send_notification.py
 test*.m
+*.emf
+*.fig

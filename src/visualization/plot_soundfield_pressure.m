@@ -1,4 +1,4 @@
-function plot_soundfield_pressure(ATFs_monitor_data_file, ...
+function plot_soundfield_pressure(ATFs_monitor_data_file, eval_env_ATF_data,...
     filters_w, f_target, varargin)
 % PLOT_SOUNDFIELD_PRESSURE 绘制声场声压分布的contour map
 %
@@ -10,7 +10,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
 %                        2. 频域权重:   [N_speakers x 1] (通常为复数)
 %   f_target      - 目标频率 (Hz)
 %
-% 可选键值对参数 ('Name', Value):
+%   varargin      - 可选键值对参数 ('Name', Value):
 %   'fs'                 - 采样率 (Hz). 默认: 16000
 %   'N_fft'              - FFT点数. 默认: 2048
 %   'DynamicRange'       - dB图的动态范围 (dB). 默认: 40
@@ -37,9 +37,9 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     addRequired(p, 'filters_w', @(x) isnumeric(x) || iscell(x));
     addRequired(p, 'f_target', @(x) isnumeric(x) && isscalar(x));
     
-    % 可选参数
-    addParameter(p, 'fs', 16000, @isnumeric);
-    addParameter(p, 'N_fft', 2048, @isnumeric);
+    % optional paras:
+    % addParameter(p, 'fs', 16000, @isnumeric);
+    % addParameter(p, 'N_fft', 2048, @isnumeric);
     % addParameter(p, 'DynamicRange', 40, @isnumeric);
     % addParameter(p, 'Colormap', 'turbo', @ischar);
     addParameter(p, 'SpeakerMasking', true, @islogical);
@@ -56,14 +56,14 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     addParameter(p, 'ZoneLineStyleBright', '-', @ischar);           % 亮区线型
     addParameter(p, 'ZoneLineStyleDark',   '-', @ischar);          % 暗区线型
     addParameter(p, 'ZoneLabels', false, @islogical);                % 是否在圆心处打标签
-
+    addParameter(p, 'target_SPL', 76, @isnumeric);                % Uniform sound pressure: 76 [dB]
     
     % 执行解析
     parse(p, ATFs_monitor_data_file, filters_w, f_target, varargin{:});
     
     % 将解析结果赋给局部变量
-    fs = p.Results.fs;
-    N_fft = p.Results.N_fft;
+    % fs = p.Results.fs;
+    % N_fft = p.Results.N_fft;
     % dynamic_range = p.Results.DynamicRange;
     % db_colormap = p.Results.Colormap;
     SpeakerMasking = p.Results.SpeakerMasking;
@@ -78,14 +78,17 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     ZoneLSB          = p.Results.ZoneLineStyleBright;
     ZoneLSD          = p.Results.ZoneLineStyleDark;
     ZoneLabels       = p.Results.ZoneLabels;
+    target_SPL       = p.Results.target_SPL;
 
     
     %% 2. 加载和准备数据
     fprintf('加载观测网格的ATFs数据: %s\n', ATFs_monitor_data_file);
     ATFs_obj = matfile(ATFs_monitor_data_file, 'Writable', false);
-    grid_points = ATFs_obj.grid_points;
-    grid_info = ATFs_obj.grid_info;
-    H_all = ATFs_obj.H_all; 
+    monitor = ATFs_obj.monitor;
+    H_all = monitor.ATF; 
+    grid_points = monitor.grid_points;
+    freq_params = monitor.freq_params;
+    clear monitor;
     %H_all = fft(RIR, size(RIR,3), 3);  % 这里的fft参数是这样的
     % H_all_exist_in_workspace = evalin('base', "exist('H_all', 'var') ");
     % if H_all_exist_in_workspace
@@ -113,7 +116,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     %     grid_points = data.grid_points;
     %     grid_info = data.grid_info;        
     % end
-    [N_speakers, N_positions, ~] = size(ATFs_obj, 'H_all'); % 直接从文件获取 H_all 的维度
+    [N_positions, N_speakers, ~] = size(H_all); % 直接从文件获取 H_all 的维度
     % [N_speakers, N_positions, ~] = size(RIR);
     fprintf('数据信息: %d 个扬声器, %d 个观测点\n', N_speakers, N_positions);
     
@@ -129,6 +132,8 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
 
     %% 3. 核心计算    
     tic;
+    N_fft = freq_params.nfft;
+    fs = freq_params.fs;
     % --- case 1: time domain filter ---
     %这里的fft参数来自于configure_freq_parameters
     freq_axis = (0:N_fft-1) * fs / N_fft;
@@ -145,7 +150,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
         freq_resolution, freq_resolution / 2);
     fprintf('-----------------------------------------------------------\n');
     % 这里的f_idx来自于get_
-    H_f = squeeze(H_all(:, :, f_idx));
+    
     
     if isreal(filters_w)
         fprintf('input is frequency domain filter\n');
@@ -154,8 +159,8 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     else
         % --- case 1: frequency domain filter ---
         fprintf('input is frequency domain filter\n');
-        freq_params = configure_freq_parameters('fs_native',16e3, ...
-    'target_freq_end',8e3,'rir_duration_ms',128);
+    %     freq_params = configure_freq_parameters('fs_native',16e3, ...
+    % 'target_freq_end',8e3,'rir_duration_ms',128);
         target_freqs = freq_params.target_freqs;
         [~, f_idx] = min(abs(target_freqs - f_target));
         actual_f = target_freqs(f_idx);
@@ -168,8 +173,19 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
         fprintf('-----------------------------------------------------------\n');
         W_f = filters_w(:, f_idx);
     end
+    tmp_Hfs = load(eval_env_ATF_data);
+    eval_ATFs_BZ = tmp_Hfs.ATF_BZ.eval;
+    eval_ATF_BZ = squeeze(eval_ATFs_BZ(:, :, f_idx));
+    tmp_P_complex = eval_ATF_BZ * W_f;
+    p_current_RMS = sqrt(mean(abs(tmp_P_complex).^2)) + eps; % pressure density
+    P_ref = 20e-6;  % ref pressure in the air
+    P_target_Pa = P_ref * db2mag(target_SPL);
+    alpha = P_target_Pa / p_current_RMS; % scaling factor
+    W_f = W_f .* alpha;
 
-    P_complex = H_f' * W_f;
+    H_f = squeeze(H_all(:, :, f_idx));
+    P_complex = H_f * W_f;    
+
     % P_complex = P_complex(:);
     fprintf('向量化计算完成！耗时: %.4f 秒\n', toc)
     
@@ -177,15 +193,16 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     P_magnitude = abs(P_complex);
     P_phase = angle(P_complex);
     epsilon = 1e-12; 
-    P_dB = 20 * log10(P_magnitude + epsilon);
+    P_SPL = 20 * log10((P_magnitude + epsilon) / P_ref);
     
     % 重构网格
-    n_rows = grid_info.ny;
-    n_cols = grid_info.nx;
+    n_rows = sqrt(length(grid_points));
+    n_cols = n_rows;
     X_grid = reshape(grid_points(:, 1), n_rows, n_cols);
     X_grid = flip(X_grid);
     Y_grid = reshape(grid_points(:, 2), n_rows, n_cols);
-    P_dB_grid = reshape(P_dB, n_rows, n_cols);
+    P_dB_grid = reshape(P_SPL, n_rows, n_cols);
+    P_dB_grid(P_dB_grid > 80) = NaN; % mask the high pressure for observation
     P_phase_grid = reshape(P_phase, n_rows, n_cols);
 
     %% 5. 屏蔽扬声器奇点
@@ -197,7 +214,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
         array = load(SpeakerDataFile);
 
         fprintf('屏蔽扬声器位置奇点...\n');        
-        speakers = array.array.s;
+        speakers = array.roomArray.s;
         
         threshold = p.Results.SpeakerMaskThreshold;
         for i = 1:size(speakers, 1)
@@ -205,18 +222,19 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
             close_points_idx = find(distances < threshold);
             if ~isempty(close_points_idx)
                 % 将一维向量 P_dB 中的对应值设为 NaN
-                P_dB(close_points_idx) = NaN;
+                P_SPL(close_points_idx) = NaN;
             end
         end
         % 用更新后的 P_dB 重新 reshape
-        P_dB_grid = reshape(P_dB, n_rows, n_cols);
+        P_dB_grid = reshape(P_SPL, n_rows, n_cols);
     end
     fprintf('完成！声压级范围: %.2f ~ %.2f dB\n', ...
-        min(P_dB,[],'omitnan'), max(P_dB,[],'omitnan'));
+        min(P_SPL,[],'omitnan'), max(P_SPL,[],'omitnan'));
 
         %% 6. 计算区域平均声压
     if ShowZones
-        p_ref = 1; % 参考声压 (20 uPa)2e-5
+ 
+        p_ref = 2e-5; % 参考声压 (20 uPa)2e-5
 
         % 识别亮区内的点
         dist_from_bright = vecnorm(grid_points - [BrightCenter,1.6], 2, 2);
@@ -228,7 +246,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
 
         % 计算亮区平均平方声压并转换为dB
         P_complex_bright = P_complex(bright_zone_indices);
-        mean_square_pressure_bright = mean(abs(P_complex_bright).^2);
+        mean_square_pressure_bright = sqrt(mean(abs(P_complex_bright).^2));
         avg_SPL_bright = 10 * log10(mean_square_pressure_bright / (p_ref^2));
 
         % 计算暗区平均平方声压并转换为dB
@@ -253,20 +271,21 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     end
 
     %% 6. 绘图
-    figure('Position', [100 100 1200 500]);
     % 声压级(dB)分布
-    subplot(1,2,1);
+    figure;
     contourf(X_grid, Y_grid, P_dB_grid, 20, 'LineStyle', 'none');
     axis equal tight; grid on;
     xlabel('X (m)', 'FontSize', 12); ylabel('Y (m)', 'FontSize', 12);
     xticks(0:1:4);yticks(0:1:4);
-    title(sprintf('声压级(dB)分布 @ %.1f Hz', actual_f), 'FontSize', 14);
-    colormap(subplot(1,2,1), brewermap([], '-RdBu')); 
-    c = colorbar; c.Label.String = '声压级 (dB)'; c.Label.FontSize = 11;
-    max_dB = max(P_dB_grid(:),[],'omitnan');
-    min_dB = min(P_dB_grid(:),[],'omitnan');
-    % max_dB = -10;
-    % min_dB = -40;
+    % title(sprintf('声压级(dB)分布 @ %.1f Hz', actual_f), 'FontSize', 14);
+    % colormap(turbo);
+   
+    colormap(brewermap([], '-RdBu')); %inferno
+    c = colorbar; c.Label.String = 'SPL (dB)'; c.Label.FontSize = 11;
+    % max_dB = max(P_dB_grid(:),[],'omitnan');
+    % min_dB = min(P_dB_grid(:),[],'omitnan');
+    max_dB = 80;
+    min_dB = 50;
     clim([min_dB,max_dB]);
     if ShowZones
         hold on;
@@ -284,7 +303,7 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     grid off;
 
     % 相位分布
-    subplot(1,2,2);
+    figure;
     contourf(X_grid, Y_grid, P_phase_grid, 20, 'LineStyle', 'none');
     if ShowZones
         hold on;
@@ -299,10 +318,12 @@ function plot_soundfield_pressure(ATFs_monitor_data_file, ...
     end
 
     axis equal tight; grid on;
+    xlim([1, 3]);
+    ylim([1.5, 2.5]);
     xlabel('X (m)', 'FontSize', 12); ylabel('Y (m)', 'FontSize', 12);
     xticks(0:1:4);yticks(0:1:4);
-    title(sprintf('声压相位分布 @ %.1f Hz (rad)', actual_f), 'FontSize', 14);
-    colormap(subplot(1,2,2), brewermap([], '-RdBu')); 
+    % title(sprintf('声压相位分布 @ %.1f Hz (rad)', actual_f), 'FontSize', 14);
+    colormap(brewermap([], '-RdBu')); 
     c = colorbar; c.Label.String = '相位 (rad)'; c.Label.FontSize = 11;
     grid off;
     

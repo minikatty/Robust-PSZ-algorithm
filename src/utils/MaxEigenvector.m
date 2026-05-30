@@ -6,3 +6,4 @@ function[MaxEigvalue, Eigvector] = MaxEigenvector(R)
     a = size(R, 1);
     MaxEigvalue = Ds(a, a);
     Eigvector = Vs(:, end);
+end

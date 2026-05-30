@@ -22,5 +22,5 @@ function planarity = calculate_planarity(w, H_B, S_matrix)
     dot_uil = ul' * ui_all;
     
     % Weighted average of dot products
-    planarity = sum(flux .* dot_uil') / sum(flux);
+    planarity = sum(flux .* dot_uil') / sum(flux) .* 100;
 end

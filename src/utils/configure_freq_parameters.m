@@ -18,7 +18,7 @@ addParameter(p, 'fs', 16000, @isnumeric);
 addParameter(p, 'rir_duration', 150, @isnumeric); % ms
 addParameter(p, 'target_freq_start', 100, @isnumeric);
 addParameter(p, 'target_freq_end', 8000, @isnumeric);
-addParameter(p, 'target_freq_step', 40, @isnumeric);
+addParameter(p, 'target_freq_step', 50, @isnumeric);
 parse(p, varargin{:});
 freq_params = p.Results;
 rir_duration = freq_params.rir_duration;
@@ -33,7 +33,7 @@ nfft = rir_len;
 fft_freq_resolution = fs / nfft;
 
 num_freq_bins = floor(nfft / 2) + 1;
-freq_axis = (0:num_freq_bins-1)'*fft_freq_resolution;
+freq_axis = (0:num_freq_bins-1)'*fft_freq_resolution; 
 
 f_target = unique([target_freq_start : target_freq_step : target_freq_end, target_freq_end])';
 f_target_indices = round(f_target / fft_freq_resolution) + 1;
