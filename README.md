@@ -95,12 +95,12 @@ Robust-PSZ-algorithm/
 ├── step2_run_cross_validation_V2.m # Step 2: Execute robustness and cross-validation tests
 ├── step3_results_show.m            # Step 3: Summarize and plot simulation results
 ├── step4_Pareto_Front.m            # Step 4: Analyze the trade-off between AC and NSRE, sensitivity analysis for weighting parameter
-├── step_betweent_4_5_data_processing.m # Data formatting for real-world validation
+├── step_between_4&5_data_processing.m # Data formatting for real-world validation
 ├── step5_Real_Measured.m           # Step 5: Validate algorithms using measured cabin data
 │
 │ % --- Analysis & Utility Scripts ---
 ├── paras_sensitivity_main.m        # Sensitivity analysis for weighting parameter ρ
-├── Revisit_Roubstness.m            # In-depth analysis of robustness mechanisms
+├── Revisit_Robustness.m            # In-depth analysis of robustness mechanisms
 ├── get_design_data.m               # Script to extract experimental configurations
 └── README.md                       # Project documentation
 ```
