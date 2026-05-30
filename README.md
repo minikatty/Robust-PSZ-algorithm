@@ -11,6 +11,20 @@ key word: sound field control; robust control; SDP; robust least square
     * Download link: [brewermap (MATLAB Central File Exchange)](https://ww2.mathworks.cn/matlabcentral/fileexchange/45208-colorbrewer-attractive-and-distinctive-colormaps)
 * **Functionality:** A brief description of each script's primary purpose is provided in the file tree comments below.
 
+## System Requirements
+
+* **Memory (RAM):** At least **16 GB** of RAM is required. Some modules utilize parallel computing, which can be memory-intensive. Please ensure your system meets this threshold to avoid out-of-memory errors during large-scale simulations.
+* **Software Dependencies:** 
+    * MATLAB R2021b or later.
+    * **Parallel Computing Toolbox:** Required for accelerated data processing and cross-validation scripts.
+    * **CVX Toolbox:** With a professional solver (e.g., MOSEK or SDPT3) installed.
+
+## Data Availability
+
+- **Simulated Data:** All simulated Room Impulse Responses (RIRs) and Acoustic Transfer Functions (ATFs) can be reproduced locally by executing the provided scripts in the `step1_data_generator.m` pipeline.
+- **Measured Data:** The real-world car cabin measurement dataset is available upon request. Due to commercial confidentiality and partnership agreements, this dataset is **strictly restricted to academic research purposes only**. It may not be redistributed or used for any commercial applications. 
+  - To obtain access to the cloud storage link, please contact the author via email.
+
 ## Project Structure
 
 ```text
@@ -80,7 +94,7 @@ Robust-PSZ-algorithm/
 ├── step1_data_generator.m          # Step 1: Generate/Load ATFs and pre-process data
 ├── step2_run_cross_validation_V2.m # Step 2: Execute robustness and cross-validation tests
 ├── step3_results_show.m            # Step 3: Summarize and plot simulation results
-├── step4_Pareto_Front.m            # Step 4: Analyze the trade-off between AC and NSRE
+├── step4_Pareto_Front.m            # Step 4: Analyze the trade-off between AC and NSRE, sensitivity analysis for weighting parameter
 ├── step_betweent_4_5_data_processing.m # Data formatting for real-world validation
 ├── step5_Real_Measured.m           # Step 5: Validate algorithms using measured cabin data
 │
@@ -90,12 +104,6 @@ Robust-PSZ-algorithm/
 ├── get_design_data.m               # Script to extract experimental configurations
 └── README.md                       # Project documentation
 ```
-
-## Data Availability
-
-- **Simulated Data:** All simulated Room Impulse Responses (RIRs) and Acoustic Transfer Functions (ATFs) can be reproduced locally by executing the provided scripts in the `step1_data_generator.m` pipeline.
-- **Measured Data:** The real-world car cabin measurement dataset is available upon request. Due to commercial confidentiality and partnership agreements, this dataset is **strictly restricted to academic research purposes only**. It may not be redistributed or used for any commercial applications. 
-  - To obtain access to the cloud storage link, please contact the author via email.
 
 ## Citation
 
