@@ -1,17 +1,40 @@
+.idea/
+.vscode/
 __pycache__/
-*.pyc
-*.pyo
-*.vscode/
+*.py[cod]
+*.asv
 *.env
 .DS_Store
+
+# Generated research assets
 *.mat
-debug*.m
-test*.m
-*.asv
-draft*.m
-*.json
-*.log
-send_notification.py
-test*.m
-*.emf
 *.fig
+*.emf
+*.pdf
+*.log
+*.json
+*.flac
+*.mp3
+data/
+logs/
+results/
+outputs/
+tmp/
+real_measured_results/
+RQ_response/private_inputs/
+RQ_response/*_results/
+RQ_response/**/run_*/
+
+# Local scratch and notification utilities
+debug*.m
+draft*.m
+test*.m
+send_notification.py
+src/utils/msal_token_cache_outlook.json
+
+# WAV files are ignored except for the curated public demo package.
+*.wav
+!RQ_response/listening_demo/*.wav
+
+# Keep the supplied Windows RIR-generator binary.
+!lib/rir_generator/rir_generator.mexw64

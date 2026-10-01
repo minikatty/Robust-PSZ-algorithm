@@ -144,7 +144,7 @@ ATF = zeros(N_grid, N_speakers, N_freq, 'single') + 1i;
 
 % 开启并行池前的相关参数检查
 phys_cores = feature('numcores'); 
-safe_workers = phys_cores - 2; % server: 14 local:8
+safe_workers = max(1, phys_cores - 2); % server: 14 local:8
 
 if isempty(gcp('nocreate'))
     parpool('local', safe_workers); 
@@ -187,7 +187,7 @@ clear RIR monitor; %释放内存
 
 %%  7.生成画稳健算法需要的所有数据
 % --- Modes to Generate ---
-modes_to_generate = {'position','snr'}; 
+modes_to_generate = {'temperature'};
 % 可调节case：'snr', 'temperature', 'position'
 % 'temperature'
 rng(2025); % For global reproducibility

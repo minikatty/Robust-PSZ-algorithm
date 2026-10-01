@@ -1,6 +1,6 @@
 function[w] = ACC_PM(HB_ctrl, HD_ctrl, HB_Desired, para) 
 % J = kappa * P_d^H * P_d ...
-%     + (1 - kappa) * (P_b - P_b_hat)^H * (P_b - P_b_hat);
+%     + (1 - kappa) * (P_b - HB_Desired)^H * (P_b - HB_Desired);
     kappa = para.kappa;
     target_freqs = para.target_freqs;
     num_frePoint = length(target_freqs);

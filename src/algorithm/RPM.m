@@ -3,9 +3,9 @@ function [w_opt] = RPM(HB_ctrl, HD_ctrl, H_desired, para)
 %   min  || [pB_d; 0] - [HB; sqrt(mu)*HD] * w ||_2 + epsilon_total * ||w||_2
 %   s.t. ||w||_2^2 <= ew
     [~, L, num_frePoint] = size(HB_ctrl);
-    scaling_factor = para.scale; % control the bound of uncertainty
-    % epsilonB = scaling_factor.* para.epsilon.B;
-    % epsilonD = scaling_factor.* para.epsilon.D;
+    scaling_factor = para.scale; % retained for backward compatibility
+    has_explicit_radii = isfield(para, 'epsilon') && ...
+        isfield(para.epsilon, 'B') && isfield(para.epsilon, 'D');
     mu = 1; % ACC-PM = PM: mu = 1
     pB_d = H_desired;
     wRPM = zeros(L, num_frePoint);
@@ -21,17 +21,37 @@ function [w_opt] = RPM(HB_ctrl, HD_ctrl, H_desired, para)
         HD = squeeze(HD_ctrl(:, :, i));
         RB = HB'*HB;
         RD = HD'*HD;
-        epsilonB = 1e-2 * sqrt(norm(RB,'fro')); % scaling_factor .* para.epsilon.B
-        epsilonD = 1e-2 * sqrt(norm(RD,'fro')); % scaling_factor .* para.epsilon.D
+        if has_explicit_radii
+            epsilonB = local_pick_radius(para.epsilon.B, i);
+            epsilonD = local_pick_radius(para.epsilon.D, i);
+        else
+            % Preserve the uncertainty setting used by historical scripts.
+            epsilonB = 1e-2 * sqrt(norm(RB, 'fro'));
+            epsilonD = 1e-2 * sqrt(norm(RD, 'fro'));
+        end
         H_i = struct('B', HB_ctrl(:, :, i), 'D', HD_ctrl(:, :, i) );
         epsilon_i = struct('B', epsilonB,'D', epsilonD);%epsilonBD(i)
         pB_d_i = pB_d(:,i);
-        e_w = 1000; % a large value keeps the contraint inactive
+        e_w = 1e4; % squared weight-norm bound, matched to maintained RACC-PM
         wRPM(:, i) = RPM_solver(H_i, pB_d_i, epsilon_i, mu, e_w, L);
     end
     % delete(gcp('nocreate')); % end the parallel pool
     w_opt.w = wRPM;
     w_opt.scale = scaling_factor;
+end
+
+function radius = local_pick_radius(source, frequency_index)
+    if isscalar(source)
+        radius = source;
+    elseif numel(source) >= frequency_index
+        radius = source(frequency_index);
+    else
+        error('RPM:UncertaintyLengthMismatch', ...
+            'No uncertainty radius is available for frequency index %d.', ...
+            frequency_index);
+    end
+    validateattributes(radius, {'numeric'}, ...
+        {'scalar', 'real', 'finite', 'nonnegative'});
 end
 
 function [wRPM] = RPM_solver(H_i, pB_d, epsilon_i, mu, e_w, L)

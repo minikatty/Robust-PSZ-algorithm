@@ -1,125 +1,166 @@
-# Robust-PSZ-algorithm
-The LMI-based framework implementation of a robust hybrid method for PSZ.
+# Robust Personal Sound Zone Control (RACC-PM)
 
-key word: sound field control; robust control; SDP; robust least square
+MATLAB research code and representative listening demonstrations for the
+manuscript **“A Unified LMI-Based Framework for Robust Personal Sound Zone
+Control.”** The work is currently under major revision for IEEE/ACM
+Transactions on Audio, Speech, and Language Processing; it must not yet be
+cited or described as a published TASLP article.
 
-## Usage Notes
+## Scope
 
-### ⚠️ Important Notes
-* **Data Exclusion:** Please note that raw data files (`.mat`) and MATLAB figure files (`.fig`) are **not included** in this repository to keep the package lightweight.
-* **Dependencies:** The visualization scripts require the **brewermap** package to render colormaps correctly. 
-    * Download link: [brewermap (MATLAB Central File Exchange)](https://ww2.mathworks.cn/matlabcentral/fileexchange/45208-colorbrewer-attractive-and-distinctive-colormaps)
-* **Functionality:** A brief description of each script's primary purpose is provided in the file tree comments below.
+The repository implements a worst-case robust framework that combines
+acoustic contrast control and pressure matching under norm-bounded acoustic
+transfer-function (ATF) uncertainty. It includes:
 
-## System Requirements
+- the maintained decomposed RACC-PM semidefinite program;
+- the raw/global counterpart used for numerical-equivalence and runtime tests;
+- ACC, ACC-Reg, PM, ACC-PM, WCRACC, WCRPM, and POTDC-RACC baselines;
+- the NoCT-WCRACC/Full-WCRACC cross-term ablation;
+- the SICER-VAST and M-ACC comparison implementations used in the revision;
+- AC, NSRE, array-effort, and planarity evaluation functions; and
+- scripts and listening examples added during the major revision.
 
-* **Memory (RAM):** At least **16 GB** of RAM is required. Some modules utilize parallel computing, which can be memory-intensive. Please ensure your system meets this threshold to avoid out-of-memory errors during large-scale simulations.
-* **Software Dependencies:** 
-    * MATLAB R2021b or later.
-    * **Parallel Computing Toolbox:** Required for accelerated data processing and cross-validation scripts.
-    * **CVX Toolbox:** With a professional solver (e.g., MOSEK or SDPT3) installed.
+The paper reports a two-zone, single-program validation. The code should not
+be interpreted as a jointly optimized arbitrary multi-program controller.
 
-## Data Availability
-
-- **Simulated Data:** All simulated Room Impulse Responses (RIRs) and Acoustic Transfer Functions (ATFs) can be reproduced locally by executing the provided scripts in the `step1_data_generator.m` pipeline.
-- **Measured Data:** The real-world car cabin measurement dataset is available upon request. Due to commercial confidentiality and partnership agreements, this dataset is **strictly restricted to academic research purposes only**. It may not be redistributed or used for any commercial applications. 
-  - To obtain access to the cloud storage link, please contact the author via email.
-
-## Project Structure
+## Repository layout
 
 ```text
-Robust-PSZ-algorithm/
-│
-├── data/                           # Acoustic Datasets (Local storage)
-│   ├── arrayGeometry/              # Array configurations (Loudspeakers/Microphones)
-│   │   ├── array.mat               # Raw coordinates of transducers
-│   │   ├── array_layout.mat        # Pre-defined topological parameters
-│   │   └── arrayGeometry.fig       # Visualization of the array setup
-│   ├── Cabin_Measurements/         # Real-world ATF dataset (60 sets from car cabin)
-│   ├── MonitorGrid/                # High-density grids for sound field visualization
-│   └── SimulateRIR/                # Simulated Room Impulse Responses (RIRs)
-│       ├── position/               # RIRs with microphone position perturbations
-│       ├── snr/                    # RIRs with varying Signal-to-Noise Ratios
-│       └── temperature/            # RIRs with temperature-induced sound speed mismatch
-│
-├── lib/                            # External toolboxes (e.g., CVX, RIR-Generator)
-├── logs/                           # Runtime logs and intermediate variables
-├── results/                        # Numerical simulation outputs and figures
-├── real_measured_results/          # Results validated using car cabin data
-│
-├── src/                            # Source Code
-│   ├── algorithm/                  # Core algorithm implementations
-│   │   ├── vast/                   # VAST (Variable Span Trade-off) method based on the public code
-│   │   ├── ACC.m                   # Acoustic Contrast Control (Baseline)
-│   │   ├── ACC_PM.m                # Hybrid ACC-PM (Non-robust baseline)
-│   │   ├── PM.m                    # Pressure Matching (Baseline)
-│   │   ├── POTDC_RACC.m            # Robust ACC via POTDC (Iterative SDP)
-│   │   ├── RACC_PM.m               # Proposed Robust ACC-PM (Core framework)
-│   │   ├── RACC_PM_GLS.m           # Proposed RACC-PM (Global Large Scale / Monolithic)
-│   │   ├── RACC_PM_Sub.m           # Proposed RACC-PM (Decomposed / Efficient version)
-│   │   ├── RPM.m                   # Robust Pressure Matching (SOCP-based)
-│   │   └── wcACC.m                 # Worst-case Robust ACC (Diagonal loading)
-│   │
-│   ├── evaluations/                # Performance evaluation metrics
-│   │   ├── calculate_AC.m          # Compute Acoustic Contrast (AC)
-│   │   ├── calculate_AE.m          # Compute Array Effort (AE)
-│   │   ├── calculate_NSRE.m        # Compute Normalized Squared Reproduction Error (NSRE)
-│   │   ├── calculate_planarity.m   # Compute sound field Planarity
-│   │   ├── evaluate_performance.m  # Main performance evaluation wrapper
-│   │   └── evaluate_performance_V2.m # Updated performance evaluation wrapper
-│   │
-│   ├── simulations/                # Acoustic environment and scenario configurations
-│   ├── visualization/              # Sound field maps, phase plots, and performance curves
-│   |── utils/                      # General utility functions and helper modules
-│   |    ├── compute_atf.m          # Compute Acoustic Transfer Functions (ATFs) from RIRs
-│   |    ├── configure_freq_parameters.m # Initialize frequency-domain simulation parameters
-│   |    ├── design_filters.m       # High-level wrapper for loudspeaker filter design
-│   |    ├── evaluate_performance.m # Performance evaluation and metric calculation
-│   |    ├── get_bound_paras.m      # Calculate uncertainty bounds for robust optimization
-│   |    ├── get_data_filename.m    # Utility for automated data file naming/management
-│   |    ├── get_real_measurement_bound.m # Extract uncertainty bounds from measured data (discard)
-│   |    ├── log_message.m          # Logging utility for tracking simulation progress
-│   |    ├── MaxEigenvector.m       # Math utility: Principal eigenvector extraction
-│   |    ├── msal_token_cache_outlook.json # Token cache for the Outlook notification system
-│   |    ├── pagemtimes_tmp.m       # Page-wise matrix multiplication (optimization)
-│   |    ├── pagenorm_tmp.m         # Page-wise matrix norm calculation
-│   |    ├── plane_wave_generator.m # Target sound field (ideal plane wave) generation
-│   |    ├── precompute_steering_matrix.m # Precompute steering matrices for planarity metrics
-│   |    ├── send_graphmail.m       # MATLAB interface for sending emails via MS Graph API
-│   |    ├── send_notification.py   # Python backend for the automated notification system
-│   |    └── temp2speed.m           # Convert temperature to sound speed (for robustness analysis)
-│   └── debug/                      # Internal debugging scripts and variable validation
-│
-│   % --- Main Experimental Pipeline ---
-├── step1_data_generator.m          # Step 1: Generate/Load ATFs and pre-process data
-├── step2_run_cross_validation_V2.m # Step 2: Execute robustness and cross-validation tests
-├── step3_results_show.m            # Step 3: Summarize and plot simulation results
-├── step4_Pareto_Front.m            # Step 4: Analyze the trade-off between AC and NSRE, sensitivity analysis for weighting parameter
-├── step_between_4&5_data_processing.m # Data formatting for real-world validation
-├── step5_Real_Measured.m           # Step 5: Validate algorithms using measured cabin data
-│
-│ % --- Analysis & Utility Scripts ---
-├── Revisit_Robustness.m            # In-depth analysis of robustness mechanisms
-├── get_design_data.m               # Script to extract experimental configurations
-└── README.md                       # Project documentation
+.
+├── src/
+│   ├── algorithm/       Core and baseline filter-design methods
+│   ├── evaluations/     AC, NSRE, array effort, and planarity
+│   ├── simulations/     Array, monitor-grid, and RIR/ATF generation
+│   ├── utils/           Shared numerical and data-loading utilities
+│   └── visualization/   Sound-field and metric plotting utilities
+├── lib/rir_generator/   RIR generator source and Windows MEX binary
+├── RQ_response/         Experiments added for the major revision
+│   └── listening_demo/  Three 10-algorithm listening comparisons
+├── step1_data_generator.m
+└── generate_plane_wave_target.m
 ```
+
+Large generated MAT files, intermediate solver checkpoints, measured cabin
+data, logs, and editable MATLAB figures are intentionally excluded.
+
+## Algorithm names
+
+The internal function/field names retained for compatibility map to the paper
+as follows:
+
+| Paper name | Main implementation |
+|---|---|
+| ACC | `ACC_Unregularized.m` |
+| ACC-Reg | `ACC.m` |
+| ACC-PM | `ACC_PM.m` |
+| WCRACC | `wcACC.m` |
+| WCRPM | `RPM.m` |
+| NoCT-WCRACC | `NoCT_WCRACC.m` |
+| Full-WCRACC | `Full_WCRACC.m` |
+| RACC-PM | `RACC_PM_Sub.m` |
+| Raw/global RACC-PM | `RACC_PM_GlobalMatched.m` |
+
+`RACC_PM_Sub.m` is the maintained implementation used for the full-scale
+RACC-PM experiments. `RACC_PM_GlobalMatched.m` is retained for the matched
+global-versus-decomposed benchmark.
+
+## Requirements
+
+The revision experiments were run with MATLAB R2024b. The core code is
+expected to work with recent MATLAB releases, subject to the following
+dependencies:
+
+- CVX with MOSEK for the SDP/SOCP formulations;
+- Signal Processing Toolbox;
+- Parallel Computing Toolbox for the large sweeps;
+- Statistics and Machine Learning Toolbox for selected analyses; and
+- Audio Toolbox plus external PESQ/PEAQ implementations only for the
+  perceptual experiment.
+
+The supplied `rir_generator.mexw64` is Windows-specific. Source files are
+included in `lib/rir_generator/` for rebuilding on other platforms.
+
+## Reproducing the simulation workflow
+
+Run MATLAB from the repository root.
+
+1. Add the source and RIR generator to the MATLAB path:
+
+   ```matlab
+   addpath(genpath('src'));
+   addpath(genpath('lib'));
+   addpath('src/evaluations', '-begin');
+   ```
+
+2. Generate the array geometry and temperature-dependent RIR/ATF database:
+
+   ```matlab
+   step1_data_generator
+   generate_plane_wave_target
+   ```
+
+   The full database is large and can take substantial time and memory.
+
+3. Run the matched full-band benchmark used in the revision:
+
+   ```matlab
+   run('RQ_response/run_all_algorithms_fair_evaluation.m')
+   ```
+
+The major-revision experiments, their roles, and additional data requirements
+are listed in [`RQ_response/README.md`](RQ_response/README.md).
+
+Before running any pipeline, confirm that MATLAB resolves the maintained
+evaluator first:
+
+```matlab
+which evaluate_performance -all
+```
+
+The expected first result is `src/evaluations/evaluate_performance.m`.
+
+## Data availability
+
+- Simulated RIRs/ATFs can be regenerated locally with the supplied geometry
+  and RIR generator.
+- The measured cabin ATFs are not distributed because they originate from an
+  industrial collaboration and are subject to confidentiality restrictions.
+  The corresponding evaluation script is included to document the protocol.
+- EBU SQAM research audio is not included and was not used in the public demo
+  package.
+
+## Listening demonstrations
+
+`RQ_response/listening_demo/` contains 33 stereo WAV files: one ideal BZ
+reference plus ten algorithm outputs for each of speech, synthetic music, and
+a 1-kHz tone. The two channels are pressure signals at a horizontal 18-cm
+spatial proxy pair; they are not HRTF-rendered binaural signals and do not
+constitute a formal listening test. Within each program item, the reference
+and every algorithm share one common digital safety gain.
+
+See the demo README and manifest for provenance, algorithm mapping, and
+licensing information.
 
 ## Citation
 
-If you find this code or dataset useful for your research, please cite our paper:
-> L. Zhou, Y. Zhu, C. Huang, Y. Wang, L. Shi, L. Gan, and H. Liu, "A Unified LMI-Based Framework for Robust Personal Sound Zone Control," *IEEE Transactions on Audio, Speech, and Language Processing*, 2025. (Under Review)
+Until an archival version is available, please cite the manuscript as under
+review rather than as a published TASLP paper:
 
-**BibTeX:**
 ```bibtex
-@article{zhou2026robust,
-  title={A Unified LMI-Based Framework for Robust Personal Sound Zone Control},
-  author={Zhou, Lei and Zhu, Yaqi and Huang, Chen and Wang, Yuewen and Shi, Liming and Gan, Lu and Liu, Hongqing},
-  journal={IEEE Transactions on Audio, Speech, and Language Processing},
-  year={2026},
-  publisher={IEEE}
+@misc{zhou2026raccpm,
+  author = {Lei Zhou and Yaqi Zhu and Chen Huang and Yuewen Wang and
+            Liming Shi and Lu Gan and Hongqing Liu},
+  title  = {A Unified LMI-Based Framework for Robust Personal Sound Zone Control},
+  year   = {2026},
+  note   = {Manuscript under major revision}
 }
 ```
 
+## License
+
+No public software license is attached while this repository remains private.
+A license must be selected and added before the repository is made public.
+
 ## Contact
 
-For any questions, please contact: zhouleicqupt2016@outlook.com.
+Lei Zhou — `zhouleicqupt2016@outlook.com`
