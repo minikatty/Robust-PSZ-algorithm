@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive listening demonstrations for robust personal sound zone control.">
+  <meta name="color-scheme" content="light">
+  <title>RACC-PM Listening Demonstrations</title>
+  <style>
+    :root {
+      --ink: #15243b;
+      --muted: #607088;
+      --paper: #f5f7fb;
+      --card: #ffffff;
+      --line: #dce3ed;
+      --blue: #1769aa;
+      --blue-dark: #0d4f87;
+      --blue-soft: #eaf4fc;
+      --gold: #c67c13;
+      --shadow: 0 18px 45px rgba(30, 56, 88, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 5%, rgba(40, 137, 196, 0.14), transparent 28rem),
+        linear-gradient(180deg, #f9fbfe 0%, var(--paper) 100%);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: var(--blue-dark); }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 54px 0 38px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: var(--blue);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 780px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.05rem, 5vw, 4rem);
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 1.02;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .repo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 17px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .repo-link:hover { border-color: #9eb9d0; background: white; }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid rgba(199, 211, 225, 0.9);
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow);
+    }
+
+    .program-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .program-tab,
+    .algorithm-button {
+      font: inherit;
+      cursor: pointer;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease,
+        transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    .program-tab {
+      min-height: 50px;
+      padding: 8px 14px;
+      border: 1px solid transparent;
+      border-radius: 13px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 750;
+    }
+
+    .program-tab:hover { background: white; color: var(--ink); }
+
+    .program-tab[aria-selected="true"] {
+      border-color: #b9d5e9;
+      background: white;
+      color: var(--blue-dark);
+      box-shadow: 0 5px 15px rgba(34, 92, 136, 0.10);
+    }
+
+    .player-area {
+      padding: clamp(22px, 4vw, 40px);
+    }
+
+    .program-meta {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 24px;
+    }
+
+    .program-meta h2 {
+      margin: 0 0 5px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+    }
+
+    .program-meta p {
+      max-width: 700px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .gain {
+      padding: 7px 11px;
+      border-radius: 9px;
+      background: var(--blue-soft);
+      color: var(--blue-dark);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.77rem;
+      white-space: nowrap;
+    }
+
+    .now-playing {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px 13px;
+      margin-bottom: 11px;
+    }
+
+    .now-playing span:first-child {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    #currentAlgorithm {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+    }
+
+    audio {
+      display: block;
+      width: 100%;
+      margin: 0 0 18px;
+      accent-color: var(--blue);
+    }
+
+    .hint {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .algorithm-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .algorithm-button {
+      min-height: 47px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: white;
+      color: var(--ink);
+      font-size: 0.89rem;
+      font-weight: 720;
+    }
+
+    .algorithm-button:hover {
+      border-color: #90b9d7;
+      background: #f7fbfe;
+      transform: translateY(-1px);
+    }
+
+    .algorithm-button[aria-pressed="true"] {
+      border-color: var(--blue);
+      background: var(--blue);
+      color: white;
+      box-shadow: 0 7px 16px rgba(23, 105, 170, 0.20);
+    }
+
+    .algorithm-button.reference:not([aria-pressed="true"]) {
+      border-color: #e4c891;
+      background: #fffaf1;
+      color: #7b4d0e;
+    }
+
+    .player-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .player-actions a {
+      font-size: 0.86rem;
+      font-weight: 700;
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 22px;
+    }
+
+    .note {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.76);
+    }
+
+    .note h3 { margin: 0 0 6px; font-size: 0.95rem; }
+    .note p { margin: 0; color: var(--muted); font-size: 0.84rem; }
+
+    footer {
+      margin-top: 26px;
+      padding-top: 19px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 760px) {
+      .page { width: min(100% - 22px, 1120px); padding-top: 28px; }
+      .hero { grid-template-columns: 1fr; align-items: start; }
+      .repo-link { justify-self: start; }
+      .program-meta { grid-template-columns: 1fr; }
+      .gain { justify-self: start; }
+      .algorithm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .notes { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 460px) {
+      .program-tabs { grid-template-columns: 1fr; }
+      .algorithm-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Interactive research demo</p>
+        <h1>Robust Personal Sound Zone Control</h1>
+        <p class="subtitle">
+          Listening demonstrations accompanying “A Unified LMI-Based Framework for Robust
+          Personal Sound Zone Control.” Switch algorithms while audio is playing to compare
+          them at the same point in time.
+        </p>
+      </div>
+      <a class="repo-link" href="https://github.com/minikatty/Robust-PSZ-algorithm">
+        View repository ↗
+      </a>
+    </header>
+
+    <section class="panel" aria-label="Listening comparison">
+      <div class="program-tabs" role="tablist" aria-label="Program material">
+        <button class="program-tab" role="tab" data-item="S01" aria-selected="true">Speech</button>
+        <button class="program-tab" role="tab" data-item="M00" aria-selected="false">Synthetic music</button>
+        <button class="program-tab" role="tab" data-item="T01" aria-selected="false">1-kHz tone</button>
+      </div>
+
+      <div class="player-area">
+        <div class="program-meta">
+          <div>
+            <h2 id="programTitle">Speech</h2>
+            <p id="programDescription"></p>
+          </div>
+          <div class="gain" id="gainLabel"></div>
+        </div>
+
+        <div class="now-playing" aria-live="polite">
+          <span>Now playing</span>
+          <strong id="currentAlgorithm">Reference</strong>
+        </div>
+        <audio id="audioPlayer" controls preload="metadata"></audio>
+        <p class="hint">
+          Start playback, then select another algorithm. The player preserves the current
+          time so that short differences can be compared directly.
+        </p>
+
+        <div class="algorithm-grid" id="algorithmGrid" aria-label="Algorithm selection"></div>
+
+        <div class="player-actions">
+          <a id="downloadLink" href="#" download>Download current WAV</a>
+          <a href="https://github.com/minikatty/Robust-PSZ-algorithm/blob/main/RQ_response/listening_demo/manifest.csv">
+            View manifest
+          </a>
+          <a href="https://github.com/minikatty/Robust-PSZ-algorithm/tree/main/RQ_response/listening_demo">
+            Browse all audio files
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="notes" aria-label="Listening notes">
+      <article class="note">
+        <h3>Level-matched within each item</h3>
+        <p>The reference and all ten algorithms use one common digital safety gain. Files are not normalized individually.</p>
+      </article>
+      <article class="note">
+        <h3>Spatial pressure proxy</h3>
+        <p>The two channels are pressures at a horizontal 18-cm bright-zone point pair, not HRTF-rendered binaural signals.</p>
+      </article>
+      <article class="note">
+        <h3>Representative comparison</h3>
+        <p>These examples support convenient A/B inspection; they do not constitute a controlled subjective listening test.</p>
+      </article>
+    </section>
+
+    <footer>
+      Speech uses LibriSpeech test-clean utterance 61-70968-0035 (CC BY 4.0).
+      Music and tone examples are generated procedurally. The manuscript is currently under major revision.
+    </footer>
+
+    <noscript>
+      <p>This comparison requires JavaScript. The WAV files remain available in the repository’s <code>RQ_response/listening_demo</code> directory.</p>
+    </noscript>
+  </main>
+
+  <script>
+    const repositoryRawRoot =
+      'https://raw.githubusercontent.com/minikatty/Robust-PSZ-algorithm/main/RQ_response/listening_demo/';
+
+    const programs = {
+      S01: {
+        title: 'Speech',
+        description: 'LibriSpeech test-clean utterance 61-70968-0035, rendered at the horizontal bright-zone proxy pair.',
+        gain: 'Common digital gain: 0.138492'
+      },
+      M00: {
+        title: 'Synthetic music',
+        description: 'An original procedural music excerpt generated from sinusoidal notes and envelopes.',
+        gain: 'Common digital gain: 0.279728'
+      },
+      T01: {
+        title: '1-kHz pure tone',
+        description: 'A diagnostic single-frequency signal for inspecting channel balance, leakage, and coloration.',
+        gain: 'Common digital gain: 1.000000'
+      }
+    };
+
+    const algorithms = [
+      { label: 'Reference', file: 'reference', reference: true },
+      { label: 'ACC', file: 'ACC' },
+      { label: 'ACC-Reg', file: 'ACC-Reg' },
+      { label: 'PM', file: 'PM' },
+      { label: 'ACC-PM', file: 'ACC-PM' },
+      { label: 'WCRACC', file: 'WCRACC' },
+      { label: 'NoCT-WCRACC', file: 'NoCT-WCRACC' },
+      { label: 'Full-WCRACC', file: 'Full-WCRACC' },
+      { label: 'POTDC-RACC', file: 'POTDC-RACC' },
+      { label: 'WCRPM', file: 'WCRPM' },
+      { label: 'RACC-PM', file: 'RACC-PM' }
+    ];
+
+    const player = document.getElementById('audioPlayer');
+    const algorithmGrid = document.getElementById('algorithmGrid');
+    const currentAlgorithm = document.getElementById('currentAlgorithm');
+    const programTitle = document.getElementById('programTitle');
+    const programDescription = document.getElementById('programDescription');
+    const gainLabel = document.getElementById('gainLabel');
+    const downloadLink = document.getElementById('downloadLink');
+
+    let selectedProgram = 'S01';
+    let selectedAlgorithm = algorithms[0];
+    let loadSequence = 0;
+
+    function isLocalPreview() {
+      return location.protocol === 'file:' ||
+        location.hostname === 'localhost' ||
+        location.hostname === '127.0.0.1';
+    }
+
+    function audioRoot() {
+      return isLocalPreview() ? '../RQ_response/listening_demo/' : repositoryRawRoot;
+    }
+
+    function filename(program, algorithm) {
+      return `${program}_${algorithm.file}.wav`;
+    }
+
+    function audioUrl(program, algorithm) {
+      return audioRoot() + encodeURIComponent(filename(program, algorithm));
+    }
+
+    function updateProgramText() {
+      const program = programs[selectedProgram];
+      programTitle.textContent = program.title;
+      programDescription.textContent = program.description;
+      gainLabel.textContent = program.gain;
+    }
+
+    function updateButtons() {
+      document.querySelectorAll('.algorithm-button').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.file === selectedAlgorithm.file));
+      });
+      document.querySelectorAll('.program-tab').forEach((button) => {
+        button.setAttribute('aria-selected', String(button.dataset.item === selectedProgram));
+      });
+    }
+
+    function selectTrack(program, algorithm, preserveTime) {
+      const priorTime = preserveTime && Number.isFinite(player.currentTime) ? player.currentTime : 0;
+      const resumePlayback = preserveTime && !player.paused;
+      const sequence = ++loadSequence;
+
+      selectedProgram = program;
+      selectedAlgorithm = algorithm;
+      updateProgramText();
+      updateButtons();
+      currentAlgorithm.textContent = algorithm.label;
+
+      const url = audioUrl(program, algorithm);
+      player.src = url;
+      downloadLink.href = url;
+      downloadLink.download = filename(program, algorithm);
+      player.load();
+
+      player.addEventListener('loadedmetadata', () => {
+        if (sequence !== loadSequence) return;
+        if (priorTime > 0 && Number.isFinite(player.duration)) {
+          player.currentTime = Math.min(priorTime, Math.max(player.duration - 0.05, 0));
+        }
+        if (resumePlayback) {
+          player.play().catch(() => {
+            // A browser may require a second explicit play action.
+          });
+        }
+      }, { once: true });
+    }
+
+    algorithms.forEach((algorithm) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'algorithm-button' + (algorithm.reference ? ' reference' : '');
+      button.dataset.file = algorithm.file;
+      button.textContent = algorithm.label;
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('click', () => selectTrack(selectedProgram, algorithm, true));
+      algorithmGrid.appendChild(button);
+    });
+
+    document.querySelectorAll('.program-tab').forEach((button) => {
+      button.addEventListener('click', () => selectTrack(button.dataset.item, algorithms[0], false));
+    });
+
+    player.addEventListener('error', () => {
+      currentAlgorithm.textContent = `${selectedAlgorithm.label} — audio unavailable`;
+    });
+
+    selectTrack(selectedProgram, selectedAlgorithm, false);
+  </script>
+</body>
+</html>

@@ -141,6 +141,18 @@ and every algorithm share one common digital safety gain.
 See the demo README and manifest for provenance, algorithm mapping, and
 licensing information.
 
+### Interactive web player
+
+The repository also includes a browser-based A/B player that preserves the
+playback position when switching algorithms:
+
+**[Open the interactive listening demonstrations](https://minikatty.github.io/Robust-PSZ-algorithm/)**
+
+The page source is stored in [`docs/index.html`](docs/index.html). The link
+becomes active after GitHub Pages is enabled for the `main` branch and
+`/docs` folder. Until then, the page can be previewed locally from the
+repository checkout.
+
 ## Citation
 
 Until an archival version is available, please cite the manuscript as under
