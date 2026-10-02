@@ -5,7 +5,7 @@ This folder contains three compact, ten-algorithm BZ/DZ comparisons:
 - `S01`: speech from LibriSpeech `test-clean`;
 - `M00`: an original, procedurally synthesized music excerpt; and
 - `T01`: a 1-kHz steady-state pure tone. It is rendered with a 0.5-s
-  pre-roll that is discarded before export, followed by a common 50-ms
+  pre-roll that is discarded before export, followed by a common 300-ms
   fade-in on the cropped pressure signals. This removes the causal start-up
   transient while preserving the steady-state BZ/DZ comparison.
 
