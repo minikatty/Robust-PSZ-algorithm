@@ -1,7 +1,7 @@
-Generated: 2026-10-01 23:04:35
+Generated: 2026-10-02 17:09:47
 Renderer source file: broadband_renderers.mat (completed nominal run aligned with the manuscript table)
 Sample rate: 16000 Hz
-Channels: horizontal 18-cm BZ pressure-proxy pair
+Channels: horizontal 18-cm BZ and DZ pressure-proxy pairs
 Algorithms: ACC, ACC-Reg, PM, ACC-PM, WCRACC, NoCT-WCRACC, Full-WCRACC, POTDC-RACC, WCRPM, RACC-PM
-Level handling: one common digital safety gain per program item, shared by its reference and all algorithms.
+Level handling: one common digital safety gain per program item, shared by both zones, the references, and all algorithms.
 M00 is generated procedurally by export_public_listening_demos.m; no SQAM material is used.

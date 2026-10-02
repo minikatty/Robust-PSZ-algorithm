@@ -1,25 +1,29 @@
 # Listening demonstrations
 
-This folder contains three compact, ten-algorithm comparisons:
+This folder contains three compact, ten-algorithm BZ/DZ comparisons:
 
 - `S01`: speech from LibriSpeech `test-clean`;
 - `M00`: an original, procedurally synthesized music excerpt; and
 - `T01`: a 1-kHz pure tone.
 
-Each item contains one ideal bright-zone reference and the outputs of ACC,
+Each item contains the desired bright-zone (BZ) plane-wave reference, the
+desired silent dark-zone (DZ) reference, and the BZ/DZ outputs of ACC,
 ACC-Reg, PM, ACC-PM, WCRACC, NoCT-WCRACC, Full-WCRACC, POTDC-RACC, WCRPM, and
-RACC-PM. `manifest.csv` lists the exact filenames and the common digital gain
-used for each item.
+RACC-PM. This yields 66 WAV files in total. `manifest.csv` lists the exact
+filenames, zone, and common digital gain used for each item. Existing names
+without a zone token denote BZ files; DZ files include `_DZ_` before the
+algorithm name.
 
 All WAV files are 16-kHz, 24-bit, two-channel signals. The two channels are
-the acoustic pressures at a horizontal 18-cm spatial proxy pair in the bright
-zone. They are not left/right HRTF binaural renderings. Headphones can be used
-for convenient A/B comparison, but the files do not constitute a controlled
-subjective listening test.
+the acoustic pressures at a horizontal 18-cm spatial proxy pair in the zone
+identified by the manifest. They are not left/right HRTF binaural renderings.
+Headphones can be used for convenient A/B comparison, but the files do not
+constitute a controlled subjective listening test.
 
-Within one item, the ideal reference and all ten algorithms share the same
-digital safety gain. Do not loudness-normalize files individually when making
-comparisons, because absolute reproduction level is part of the result.
+Within one item, both zones, the two references, and all ten algorithms share
+the same digital safety gain. Do not loudness-normalize files or adjust the
+playback volume between BZ and DZ when making comparisons, because the
+inter-zone level difference is part of the result.
 
 ## Audio licensing and provenance
 

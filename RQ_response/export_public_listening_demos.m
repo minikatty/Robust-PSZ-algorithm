@@ -1,8 +1,9 @@
 function export_public_listening_demos(renderer_file, output_dir, speech_file)
 %EXPORT_PUBLIC_LISTENING_DEMOS Export the public 10-algorithm demo set.
 %   The package contains three program types (speech, synthetic music, and
-%   a 1-kHz tone).  For each item, one ideal BZ reference and the BZ output
-%   of ten algorithms are exported at the horizontal 18-cm proxy pair.
+%   a 1-kHz tone).  For each item, the desired BZ reference, the desired
+%   silent DZ reference, and the BZ/DZ outputs of ten algorithms are
+%   exported at the horizontal 18-cm proxy pairs.
 %
 %   The synthetic music is generated in this file and can be redistributed.
 %   No EBU SQAM audio or derivative is used by this exporter.
@@ -31,7 +32,16 @@ loaded = load(renderer_file, 'renderers', 'reference', ...
     'point_definition');
 renderers = loaded.renderers;
 reference = loaded.reference;
+point_definition = loaded.point_definition;
 fs = reference.fs;
+
+horizontal_indices = point_definition.horizontal_local_indices;
+bz_indices = point_definition.bz_indices(horizontal_indices);
+dz_indices = point_definition.dz_indices(horizontal_indices);
+if numel(bz_indices) ~= 2 || numel(dz_indices) ~= 2
+    error('PublicDemo:InvalidPointDefinition', ...
+        'Expected two horizontal proxy points in each zone.');
+end
 
 algorithm_fields = { ...
     'ACC', 'ACC_Reg', 'PM', 'ACC_PM', 'wcRACC', ...
@@ -63,36 +73,55 @@ for item_index = 1:numel(items)
     source = normalize_active_rms(item.source, fs);
     output_length = numel(source) + ...
         size(renderers.(algorithm_fields{1}).effective_irs, 2) - 1;
-    ideal = reference.target_pressure_pa .* render_fractional_delays( ...
-        source, reference.total_delay_samples(1:2), output_length);
+    ideal_bz = reference.target_pressure_pa .* render_fractional_delays( ...
+        source, reference.total_delay_samples(bz_indices), output_length);
+    ideal_dz = zeros(size(ideal_bz));
 
-    rendered = cell(numel(algorithm_fields), 1);
-    global_peak = max(abs(ideal(:)));
+    rendered_bz = cell(numel(algorithm_fields), 1);
+    rendered_dz = cell(numel(algorithm_fields), 1);
+    global_peak = max(abs(ideal_bz(:)));
     for algorithm_index = 1:numel(algorithm_fields)
         effective_irs = renderers.(algorithm_fields{algorithm_index}) ...
-            .effective_irs(1:2, :);
-        rendered{algorithm_index} = render_effective_irs( ...
-            source, effective_irs);
+            .effective_irs;
+        rendered_bz{algorithm_index} = render_effective_irs( ...
+            source, effective_irs(bz_indices, :));
+        rendered_dz{algorithm_index} = render_effective_irs( ...
+            source, effective_irs(dz_indices, :));
         global_peak = max(global_peak, ...
-            max(abs(rendered{algorithm_index}(:))));
+            max(abs(rendered_bz{algorithm_index}(:))));
+        global_peak = max(global_peak, ...
+            max(abs(rendered_dz{algorithm_index}(:))));
     end
     common_gain = min(1, 0.95 / max(global_peak, eps));
 
     reference_name = sprintf('%s_reference.wav', item.id);
     audiowrite(fullfile(output_dir, reference_name), ...
-        ideal .* common_gain, fs, 'BitsPerSample', 24);
+        ideal_bz .* common_gain, fs, 'BitsPerSample', 24);
     rows(end + 1, :) = {item.id, item.category, 'reference', ...
         'BZ', 'horizontal', reference_name, fs, common_gain}; %#ok<AGROW>
+
+    dz_reference_name = sprintf('%s_DZ_reference.wav', item.id);
+    audiowrite(fullfile(output_dir, dz_reference_name), ...
+        ideal_dz, fs, 'BitsPerSample', 24);
+    rows(end + 1, :) = {item.id, item.category, 'reference', ...
+        'DZ', 'horizontal', dz_reference_name, fs, common_gain}; %#ok<AGROW>
 
     for algorithm_index = 1:numel(algorithm_fields)
         label = algorithm_labels{algorithm_index};
         safe_label = regexprep(label, '[^A-Za-z0-9-]', '-');
         filename = sprintf('%s_%s.wav', item.id, safe_label);
         audiowrite(fullfile(output_dir, filename), ...
-            rendered{algorithm_index} .* common_gain, fs, ...
+            rendered_bz{algorithm_index} .* common_gain, fs, ...
             'BitsPerSample', 24);
         rows(end + 1, :) = {item.id, item.category, label, ...
             'BZ', 'horizontal', filename, fs, common_gain}; %#ok<AGROW>
+
+        dz_filename = sprintf('%s_DZ_%s.wav', item.id, safe_label);
+        audiowrite(fullfile(output_dir, dz_filename), ...
+            rendered_dz{algorithm_index} .* common_gain, fs, ...
+            'BitsPerSample', 24);
+        rows(end + 1, :) = {item.id, item.category, label, ...
+            'DZ', 'horizontal', dz_filename, fs, common_gain}; %#ok<AGROW>
     end
 end
 
@@ -109,10 +138,12 @@ fprintf(fid, 'Generated: %s\n', ...
 fprintf(fid, 'Renderer source file: %s\n', ...
     char(string(get_file_name(renderer_file))));
 fprintf(fid, 'Sample rate: %d Hz\n', fs);
-fprintf(fid, 'Channels: horizontal 18-cm BZ pressure-proxy pair\n');
+fprintf(fid, ['Channels: horizontal 18-cm BZ and DZ ', ...
+    'pressure-proxy pairs\n']);
 fprintf(fid, 'Algorithms: %s\n', strjoin(algorithm_labels, ', '));
 fprintf(fid, ['Level handling: one common digital safety gain per ', ...
-    'program item, shared by its reference and all algorithms.\n']);
+    'program item, shared by both zones, the references, and all ', ...
+    'algorithms.\n']);
 fprintf(fid, ['M00 is generated procedurally by ', ...
     'export_public_listening_demos.m; no SQAM material is used.\n']);
 clear cleanup;

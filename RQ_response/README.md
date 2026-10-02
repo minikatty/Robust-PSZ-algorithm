@@ -34,8 +34,8 @@ these entry points. Generated results are intentionally excluded from Git.
   ATF dataset is not distributable.
 - PESQ/PEAQ evaluation requires separately installed third-party software and
   properly licensed source audio.
-- The listening WAV files already committed under `listening_demo/` can be
-  inspected without any MATLAB dependency.
+- The 66 BZ/DZ listening WAV files already committed under `listening_demo/`
+  can be inspected without any MATLAB dependency.
 
 The numerical uncertainty level used by the optimizer is a radius of an
 unstructured Frobenius ball. It should not be equated directly with the

@@ -35,7 +35,7 @@ be interpreted as a jointly optimized arbitrary multi-program controller.
 │   └── visualization/   Sound-field and metric plotting utilities
 ├── lib/rir_generator/   RIR generator source and Windows MEX binary
 ├── RQ_response/         Experiments added for the major revision
-│   └── listening_demo/  Three 10-algorithm listening comparisons
+│   └── listening_demo/  Three 10-algorithm BZ/DZ listening comparisons
 ├── step1_data_generator.m
 └── generate_plane_wave_target.m
 ```
@@ -131,12 +131,14 @@ The expected first result is `src/evaluations/evaluate_performance.m`.
 
 ## Listening demonstrations
 
-`RQ_response/listening_demo/` contains 33 stereo WAV files: one ideal BZ
-reference plus ten algorithm outputs for each of speech, synthetic music, and
-a 1-kHz tone. The two channels are pressure signals at a horizontal 18-cm
-spatial proxy pair; they are not HRTF-rendered binaural signals and do not
-constitute a formal listening test. Within each program item, the reference
-and every algorithm share one common digital safety gain.
+`RQ_response/listening_demo/` contains 66 stereo WAV files for speech,
+synthetic music, and a 1-kHz tone. Each item provides the desired BZ plane-wave
+reference, the desired silent DZ reference, and the BZ/DZ outputs of ten
+algorithms. The two channels are pressure signals at a horizontal 18-cm
+spatial proxy pair in the selected zone; they are not HRTF-rendered binaural
+signals and do not constitute a formal listening test. Within each program
+item, both zones, both references, and every algorithm share one common
+digital safety gain.
 
 See the demo README and manifest for provenance, algorithm mapping, and
 licensing information.

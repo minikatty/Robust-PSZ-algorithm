@@ -170,6 +170,55 @@
       white-space: nowrap;
     }
 
+    .zone-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      margin: 0 0 22px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+
+    .zone-toggle {
+      display: inline-grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr));
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: white;
+    }
+
+    .zone-button {
+      min-height: 40px;
+      padding: 7px 13px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.86rem;
+      font-weight: 780;
+      cursor: pointer;
+    }
+
+    .zone-button:hover { color: var(--ink); }
+
+    .zone-button[aria-pressed="true"] {
+      background: var(--blue-dark);
+      color: white;
+      box-shadow: 0 4px 12px rgba(13, 79, 135, 0.18);
+    }
+
+    .zone-description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
     .now-playing {
       display: flex;
       flex-wrap: wrap;
@@ -284,6 +333,8 @@
       .repo-link { justify-self: start; }
       .program-meta { grid-template-columns: 1fr; }
       .gain { justify-self: start; }
+      .zone-row { grid-template-columns: 1fr; }
+      .zone-toggle { width: 100%; }
       .algorithm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .notes { grid-template-columns: 1fr; }
     }
@@ -306,8 +357,9 @@
         <h1>Robust Personal Sound Zone Control</h1>
         <p class="subtitle">
           Listening demonstrations accompanying “A Unified LMI-Based Framework for Robust
-          Personal Sound Zone Control.” Switch algorithms while audio is playing to compare
-          them at the same point in time.
+          Personal Sound Zone Control.” Switch algorithms or listening zones while audio is
+          playing to compare bright-zone reproduction and dark-zone leakage at the same point
+          in time.
         </p>
       </div>
       <a class="repo-link" href="https://github.com/minikatty/Robust-PSZ-algorithm">
@@ -331,14 +383,23 @@
           <div class="gain" id="gainLabel"></div>
         </div>
 
+        <div class="zone-row">
+          <div class="zone-toggle" role="group" aria-label="Listening zone">
+            <button class="zone-button" type="button" data-zone="BZ" aria-pressed="true">Bright zone (BZ)</button>
+            <button class="zone-button" type="button" data-zone="DZ" aria-pressed="false">Dark zone (DZ)</button>
+          </div>
+          <p class="zone-description" id="zoneDescription"></p>
+        </div>
+
         <div class="now-playing" aria-live="polite">
           <span>Now playing</span>
           <strong id="currentAlgorithm">Reference</strong>
         </div>
         <audio id="audioPlayer" controls preload="metadata"></audio>
         <p class="hint">
-          Start playback, then select another algorithm. The player preserves the current
-          time so that short differences can be compared directly.
+          Start playback, then select another algorithm or switch between BZ and DZ. The
+          player preserves the current time so that reproduction and leakage can be compared
+          directly. Keep the playback volume unchanged when switching zones.
         </p>
 
         <div class="algorithm-grid" id="algorithmGrid" aria-label="Algorithm selection"></div>
@@ -357,16 +418,16 @@
 
     <section class="notes" aria-label="Listening notes">
       <article class="note">
-        <h3>Level-matched within each item</h3>
-        <p>The reference and all ten algorithms use one common digital safety gain. Files are not normalized individually.</p>
+        <h3>One scale across both zones</h3>
+        <p>BZ, DZ, reference, and all ten algorithms share one digital safety gain per item. Files are not normalized individually.</p>
       </article>
       <article class="note">
         <h3>Spatial pressure proxy</h3>
         <p>The two channels are pressures at a horizontal 18-cm bright-zone point pair, not HRTF-rendered binaural signals.</p>
       </article>
       <article class="note">
-        <h3>Representative comparison</h3>
-        <p>These examples support convenient A/B inspection; they do not constitute a controlled subjective listening test.</p>
+        <h3>Desired fields</h3>
+        <p>The BZ reference is the desired plane wave, whereas the DZ reference is silence. DZ algorithm tracks expose residual leakage.</p>
       </article>
     </section>
 
@@ -388,7 +449,7 @@
       S01: {
         title: 'Speech',
         description: 'LibriSpeech test-clean utterance 61-70968-0035, rendered at the horizontal bright-zone proxy pair.',
-        gain: 'Common digital gain: 0.138492'
+        gain: 'Common digital gain: 0.126007'
       },
       M00: {
         title: 'Synthetic music',
@@ -423,8 +484,10 @@
     const programDescription = document.getElementById('programDescription');
     const gainLabel = document.getElementById('gainLabel');
     const downloadLink = document.getElementById('downloadLink');
+    const zoneDescription = document.getElementById('zoneDescription');
 
     let selectedProgram = 'S01';
+    let selectedZone = 'BZ';
     let selectedAlgorithm = algorithms[0];
     let loadSequence = 0;
 
@@ -438,12 +501,13 @@
       return isLocalPreview() ? '../RQ_response/listening_demo/' : repositoryRawRoot;
     }
 
-    function filename(program, algorithm) {
-      return `${program}_${algorithm.file}.wav`;
+    function filename(program, algorithm, zone) {
+      const zoneToken = zone === 'DZ' ? 'DZ_' : '';
+      return `${program}_${zoneToken}${algorithm.file}.wav`;
     }
 
-    function audioUrl(program, algorithm) {
-      return audioRoot() + encodeURIComponent(filename(program, algorithm));
+    function audioUrl(program, algorithm, zone) {
+      return audioRoot() + encodeURIComponent(filename(program, algorithm, zone));
     }
 
     function updateProgramText() {
@@ -451,6 +515,9 @@
       programTitle.textContent = program.title;
       programDescription.textContent = program.description;
       gainLabel.textContent = program.gain;
+      zoneDescription.textContent = selectedZone === 'BZ'
+        ? 'Target listening zone: assess reproduction quality and spatial consistency.'
+        : 'Quiet zone: assess residual inter-zone leakage using exactly the same digital scale.';
     }
 
     function updateButtons() {
@@ -460,23 +527,29 @@
       document.querySelectorAll('.program-tab').forEach((button) => {
         button.setAttribute('aria-selected', String(button.dataset.item === selectedProgram));
       });
+      document.querySelectorAll('.zone-button').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.zone === selectedZone));
+      });
     }
 
-    function selectTrack(program, algorithm, preserveTime) {
+    function selectTrack(program, algorithm, zone, preserveTime) {
       const priorTime = preserveTime && Number.isFinite(player.currentTime) ? player.currentTime : 0;
       const resumePlayback = preserveTime && !player.paused;
       const sequence = ++loadSequence;
 
       selectedProgram = program;
       selectedAlgorithm = algorithm;
+      selectedZone = zone;
       updateProgramText();
       updateButtons();
-      currentAlgorithm.textContent = algorithm.label;
+      currentAlgorithm.textContent = selectedZone === 'DZ' && algorithm.reference
+        ? 'Desired silence'
+        : `${algorithm.label} · ${selectedZone}`;
 
-      const url = audioUrl(program, algorithm);
+      const url = audioUrl(program, algorithm, zone);
       player.src = url;
       downloadLink.href = url;
-      downloadLink.download = filename(program, algorithm);
+      downloadLink.download = filename(program, algorithm, zone);
       player.load();
 
       player.addEventListener('loadedmetadata', () => {
@@ -499,19 +572,25 @@
       button.dataset.file = algorithm.file;
       button.textContent = algorithm.label;
       button.setAttribute('aria-pressed', 'false');
-      button.addEventListener('click', () => selectTrack(selectedProgram, algorithm, true));
+      button.addEventListener('click', () => selectTrack(selectedProgram, algorithm, selectedZone, true));
       algorithmGrid.appendChild(button);
     });
 
     document.querySelectorAll('.program-tab').forEach((button) => {
-      button.addEventListener('click', () => selectTrack(button.dataset.item, algorithms[0], false));
+      button.addEventListener('click', () => selectTrack(button.dataset.item, algorithms[0], selectedZone, false));
+    });
+
+    document.querySelectorAll('.zone-button').forEach((button) => {
+      button.addEventListener('click', () => {
+        selectTrack(selectedProgram, selectedAlgorithm, button.dataset.zone, true);
+      });
     });
 
     player.addEventListener('error', () => {
-      currentAlgorithm.textContent = `${selectedAlgorithm.label} — audio unavailable`;
+      currentAlgorithm.textContent = `${selectedAlgorithm.label} · ${selectedZone} — audio unavailable`;
     });
 
-    selectTrack(selectedProgram, selectedAlgorithm, false);
+    selectTrack(selectedProgram, selectedAlgorithm, selectedZone, false);
   </script>
 </body>
 </html>
