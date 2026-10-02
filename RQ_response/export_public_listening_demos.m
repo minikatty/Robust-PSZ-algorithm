@@ -60,12 +60,16 @@ end
 
 speech = prepare_speech(speech_file, fs);
 music = synthesize_music(fs, 8.0);
-tone = synthesize_tone(fs, 6.0, 1000);
+tone_pre_roll_s = 0.5;
+tone_output_fade_s = 0.05;
+tone = synthesize_tone(fs, 6.0 + tone_pre_roll_s, 1000);
 
 items = struct( ...
     'id', {'S01', 'M00', 'T01'}, ...
     'category', {'speech', 'synthetic_music', 'tone'}, ...
-    'source', {speech, music, tone});
+    'source', {speech, music, tone}, ...
+    'pre_roll_s', {0, 0, tone_pre_roll_s}, ...
+    'output_fade_s', {0, 0, tone_output_fade_s});
 
 rows = cell(0, 8);
 for item_index = 1:numel(items)
@@ -79,7 +83,6 @@ for item_index = 1:numel(items)
 
     rendered_bz = cell(numel(algorithm_fields), 1);
     rendered_dz = cell(numel(algorithm_fields), 1);
-    global_peak = max(abs(ideal_bz(:)));
     for algorithm_index = 1:numel(algorithm_fields)
         effective_irs = renderers.(algorithm_fields{algorithm_index}) ...
             .effective_irs;
@@ -87,6 +90,33 @@ for item_index = 1:numel(items)
             source, effective_irs(bz_indices, :));
         rendered_dz{algorithm_index} = render_effective_irs( ...
             source, effective_irs(dz_indices, :));
+    end
+
+    pre_roll_samples = round(item.pre_roll_s * fs);
+    if pre_roll_samples > 0
+        ideal_bz = discard_preroll(ideal_bz, pre_roll_samples);
+        ideal_dz = discard_preroll(ideal_dz, pre_roll_samples);
+        for algorithm_index = 1:numel(algorithm_fields)
+            rendered_bz{algorithm_index} = discard_preroll( ...
+                rendered_bz{algorithm_index}, pre_roll_samples);
+            rendered_dz{algorithm_index} = discard_preroll( ...
+                rendered_dz{algorithm_index}, pre_roll_samples);
+        end
+    end
+
+    if item.output_fade_s > 0
+        ideal_bz = apply_output_fade_in( ...
+            ideal_bz, fs, item.output_fade_s);
+        for algorithm_index = 1:numel(algorithm_fields)
+            rendered_bz{algorithm_index} = apply_output_fade_in( ...
+                rendered_bz{algorithm_index}, fs, item.output_fade_s);
+            rendered_dz{algorithm_index} = apply_output_fade_in( ...
+                rendered_dz{algorithm_index}, fs, item.output_fade_s);
+        end
+    end
+
+    global_peak = max(abs(ideal_bz(:)));
+    for algorithm_index = 1:numel(algorithm_fields)
         global_peak = max(global_peak, ...
             max(abs(rendered_bz{algorithm_index}(:))));
         global_peak = max(global_peak, ...
@@ -146,6 +176,9 @@ fprintf(fid, ['Level handling: one common digital safety gain per ', ...
     'algorithms.\n']);
 fprintf(fid, ['M00 is generated procedurally by ', ...
     'export_public_listening_demos.m; no SQAM material is used.\n']);
+fprintf(fid, ['T01 uses a 0.5-s pre-roll that is discarded after ', ...
+    'rendering, followed by a common 50-ms fade-in on the cropped ', ...
+    'pressure signals.\n']);
 clear cleanup;
 
 fprintf('Exported %d WAV files to %s.\n', height(manifest), output_dir);
@@ -269,6 +302,26 @@ source_spectrum = fft(source, fft_length);
 response_spectrum = fft(effective_irs, fft_length, 2);
 output = real(ifft(response_spectrum .* source_spectrum.', [], 2)).';
 output = output(1:output_length, :);
+end
+
+function output = discard_preroll(input, number_of_samples)
+if number_of_samples >= size(input, 1)
+    error('PublicDemo:InvalidPreRoll', ...
+        'The pre-roll must be shorter than the rendered signal.');
+end
+output = input((number_of_samples + 1):end, :);
+end
+
+function output = apply_output_fade_in(input, fs, duration_s)
+output = input;
+fade_samples = min(size(output, 1), max(1, round(duration_s * fs)));
+if fade_samples == 1
+    output(1, :) = 0;
+    return;
+end
+fade = 0.5 - 0.5*cos(pi*(0:(fade_samples - 1)).' / ...
+    (fade_samples - 1));
+output(1:fade_samples, :) = output(1:fade_samples, :) .* fade;
 end
 
 function name = get_file_name(path_value)
