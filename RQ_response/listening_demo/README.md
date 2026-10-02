@@ -4,10 +4,11 @@ This folder contains three compact, ten-algorithm BZ/DZ comparisons:
 
 - `S01`: speech from LibriSpeech `test-clean`;
 - `M00`: an original, procedurally synthesized music excerpt; and
-- `T01`: a 1-kHz steady-state pure tone. It is rendered with a 0.5-s
-  pre-roll that is discarded before export, followed by a common 300-ms
-  fade-in on the cropped pressure signals. This removes the causal start-up
-  transient while preserving the steady-state BZ/DZ comparison.
+- `T01`: a 1-kHz steady-state pure tone. It is rendered with 0.5-s pre-roll
+  and post-roll margins, from which a 6.0-s steady segment is retained. Common 300-ms
+  fade-in/out envelopes are then applied directly to the cropped pressure
+  signals. This excludes both causal start-up and shut-down transients while
+  preserving the steady-state BZ/DZ comparison.
 
 Each item contains the desired bright-zone (BZ) plane-wave reference, the
 desired silent dark-zone (DZ) reference, and the BZ/DZ outputs of ACC,
