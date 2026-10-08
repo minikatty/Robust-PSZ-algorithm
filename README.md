@@ -181,4 +181,4 @@ attribution as documented in
 
 ## Contact
 
-Lei Zhou — `zhouleicqupt2016@outlook.com`
+Lei Zhou — `zhouleicqupt2016 [at] outlook [dot] com`
