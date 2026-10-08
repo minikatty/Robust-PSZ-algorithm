@@ -172,8 +172,12 @@ review rather than as a published TASLP paper:
 
 ## License
 
-No public software license is attached while this repository remains private.
-A license must be selected and added before the repository is made public.
+The source code and documentation in this repository are released under the
+[MIT License](LICENSE). Third-party materials retain their original licenses;
+in particular, the LibriSpeech-derived demo files are distributed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) and require
+attribution as documented in
+[`RQ_response/listening_demo/README.md`](RQ_response/listening_demo/README.md).
 
 ## Contact
 
